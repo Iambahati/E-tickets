@@ -12,7 +12,7 @@ class Db
     {
  
         // https://www.phptutorial.net/php-pdo
-        $this->dsn = "mysql:host=localhost;dbname=ticketingapp";
+        $this->dsn = "mysql:host=localhost;dbname=e-ticketing";
         $this->dbuser = "root";
         $this->dbpass = '';
         try {
