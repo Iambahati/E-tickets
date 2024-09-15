@@ -1,0 +1,44 @@
+html {color-scheme: #323232;}
+
+body {
+
+  color: #eee;
+  font-size: 1.125rem;
+  font-family: Comfortaa, sans-serif;
+  line-height: 1.5;
+  background-color: #323232;
+}
+/*
+.wrapper {
+
+  width: min(900px, 100% -3rem);
+  margin-inline: auto;
+  
+}
+*/
+table{
+  width: 70%;
+  margin-left: 130px;
+  border-collapse: collapse;
+  margin-bottom: 50%;
+  
+}
+
+caption,
+th, 
+td {
+  padding: 1 rem;
+}
+
+caption,
+th {
+  text-align: left; 
+}
+
+th {
+  background: hsl(0, 0%, 0% / 0.5);
+}
+
+tr:nth-of-type(2n) {
+  background: hsl(0, 0%, 0% / 0.1);
+}
