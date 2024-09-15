@@ -13,3 +13,7 @@ Follow these steps to install and set up the E-Ticketing system on your local ma
 Steps
 * Clone the repository:
 
+
+
+## Folder structure
+All the application code is located within the eticketing folder.
