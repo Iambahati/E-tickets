@@ -17,3 +17,4 @@ Steps
 
 ## Folder structure
 All the application code is located within the eticketing folder.
+

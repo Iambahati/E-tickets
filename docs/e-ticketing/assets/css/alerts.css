@@ -1,0 +1,61 @@
+/* alert message container */
+
+.alert .text {
+    display: block;
+    padding: 20px;
+    margin: 10px;
+    border-radius: 3px;
+    background-color: #d6d8d9;
+    border-color: #c6c8ca;
+  }
+  
+  
+  
+  /* Styling the success alert */
+  
+  .alert.success .text {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+  }
+  
+  .alert.success .text,
+  .alert.success .close {
+    color: #155724;
+  }
+  
+  /* Styling the error alert */
+  
+  .alert.error .text {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+  }
+  
+  .alert.error .text,
+  .alert.error .close {
+    color: #721c24;
+  }
+  
+  /* styling the info alert */
+  
+  .alert.info .text {
+    background-color: #cce5ff;
+    border-color: #b8daff;
+    color: #004085;
+  }
+  
+  .alert.info .text,
+  .alert.info .close {
+   color: #004085;
+  }
+  
+  /* Styling the warning alert */
+  
+  .alert.warning .text {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+  }
+  
+  .alert.warning .text,
+  .alert.warning .close {
+    color: #856404;
+  }

@@ -1,0 +1,54 @@
+.about-heading{
+    text-align: right;
+    margin-right: 38%;
+    margin-top: 30px;
+}
+.about-heading h1{
+    font-size: 60px;
+    font-weight: lighter;
+    color: #fcc201;
+    font-family: 'Fredericka the Great', cursive;
+    margin-bottom: 1px;
+    margin-top: 20px;
+}
+.about-us{
+    font-family: Comfortaa, sans-serif;
+    display: flex;
+    align-items: center;
+    width: 85%;
+    margin: auto;
+}
+.about-us img{
+    flex: 0 50%;
+    max-width: 50%;
+    height: auto;
+}
+.inner-section{
+    padding: 40px;
+}
+.inner-section h1{
+    color: #1e1e1e;
+    font-family: Comfortaa, sans-serif;
+    font-size: 50px;
+    margin: 15px 1px;
+}
+.inner-section p{
+    color: #999999;
+    font-size: 18px;
+    line-height: 1.5;
+    margin: 15px 1px;
+}
+.contact-us {
+    display: inline-block;
+    color: white;
+    font-size: 15px;
+    font-family: Comfortaa, sans-serif;
+    background-color: #0084ff;
+    border: none;
+    border-radius: 5px;
+    padding: 12px 20px;
+    cursor: pointer;
+}
+.contact-us:hover{
+    background-color: #006dd6;
+}
