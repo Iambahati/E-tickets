@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-include_once ("./connect/database.php");
+include_once ("connect/database.php");
 
 
 ?>
