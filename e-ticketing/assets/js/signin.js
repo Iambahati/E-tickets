@@ -6,8 +6,8 @@ const msgEl = document.querySelector('#signin small');
 
 // The URLs for redirection based on the response message
 const URLs = {
-  admin: 'http://127.0.0.1/ticketingapp/interfaces/admin.php',
-  client: 'http://127.0.0.1/ticketingapp/interfaces/events.php',
+  admin: 'http://localhost/E-Ticketing/e-ticketing/interfaces/admin.php',
+  client: 'http://localhost/E-Ticketing/e-ticketing/interfaces/events.php',
 };
 
 // Validate input and show error or success
