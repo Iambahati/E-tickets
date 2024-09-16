@@ -147,8 +147,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `email`, `contact`, `password`, `is_admin`) VALUES
 (1, 'admin', 'adm1n.tickectok@gmail.com', '707294699', '$2y$10$/229dX4ZqIfTKe9TO4RTVOe/ISqOJ/jKG7fXeW1Q39osPQ25OEQ/2', 1),
-(5, 'Bahati', 'baha.karanja@gmail.com', '0712354788', '$2y$10$mQyAL8N.CjfbPFxhJq9N7.GfsJGWhwmzmCWC9eIRDHAUnOEwg2DjG', 0),
-(7, 'stephh', 'me@stephiiee.dev', '071234578', '$2y$10$X7fM93PKqoSq.eEBKyHfXutPTQnSfdeHLibIP8Rd8R67uEOlgyzZe', 0),
+(5, 'john', 'john.doe@test.com', '0712354788', '$2y$10$cuQl.hdCkOsb85362wYwROIEbW3pWu8Z6QV2TACfpvrbuJaSKJoGa', 0),
+(7, 'stephh', 'me@stephiiee.dev', '071234578', '$2y$10$va2UYPzxuusccIF7HU8gau6pa340xMHror.U.fmLW5NI/ItAq30zy', 0),
 (8, 'andy', 'andy.kimani@gmail.com', '071234578', '$2y$10$ovRI57LqSIWkdbZHbeHyUOnrcMADneyG8A3BZl32mubih5UcRB4f6', 0);
 
 --
