@@ -83,6 +83,7 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
     <?php else : ?>
         <div>
             <p class="box">Upcoming Events</p>
+            <?= str_repeat('<br>', 3); ?>
 
             <!-- this row is the container with the card-->
             <div class="card-container" style="margin-left: 50px; margin-bottom: 70px;">
