@@ -39,9 +39,29 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
     <link rel="stylesheet" href="../assets/css/alerts.css">
     <link rel="stylesheet" href="../assets/css/cards.css">
     <link rel="stylesheet" href="../assets/css/footer.css">
+    <style>
+        .box {
+            color: grey;
+            /* Text color */
+            background-color: #ffffff;
+            /* White background */
+            font-size: 16px;
+            /* Font size */
+            border-radius: 8px;
+            /* Rounded edges */
+            padding: 10px;
+            /* Padding for spacing */
+            text-align: center;
+            /* Center text */
+            margin-left: 50px;
+            /* Margin to the left */
+            margin-right: 50px;
+            /* Margin to the right */
+        }
+    </style>
 </head>
 
-<body>
+<body style="min-height: 100vh; display: flex; flex-direction: column;">
 
     <div class="navbar">
         <h1 class="logo" style="font-size: 40px;">TickeTok </h1>
@@ -59,6 +79,7 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
 
     <?php if (!$cards_data) : ?>
         <p class="box">No upcoming Events</p>
+        <div style="flex-grow:1"></div>
     <?php else : ?>
         <div>
             <p class="box">Upcoming Events</p>
@@ -131,6 +152,7 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
             </div>
         </div>
     <?php endif; ?>
+    <div style="flex-grow:1"></div>
     <!--Modal for Buying Tickets-->
     <div class="modal" id="buying">
         <div class="form-box">
