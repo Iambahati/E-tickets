@@ -32,7 +32,7 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
 <head>
     <meta charset="x-UTF-16LE-BOM">
     <meta name="viewport" content="width=device=width, initial-scale=1.0">
-    <title>TickeTok </title>
+    <title>E-ticketing Admin Panel</title>
     <link href="https://fonts.googleapis.com/css?family=Bad+Script|Comfortaa|Amiri|Cormorant+Garamond|Rancho|Fredericka+the+Great|Handlee|Homemade+Apple|Philosopher|Playfair+Display+SC|Reenie+Beanie|Unna|Zilla+Slab" rel="stylesheet">
     <script src="https://kit.fontawesome.com/0d8179c479.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="../assets/css/main.css">
@@ -41,13 +41,33 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
     <link rel="stylesheet" href="../assets/css/cards.css">
     <link rel="stylesheet" href="../assets/css/admincards.css">
     <link rel="stylesheet" href="../assets/css/footer.css">
+    <style>
+        .box {
+            color: grey;
+            /* Text color */
+            background-color: #ffffff;
+            /* White background */
+            font-size: 16px;
+            /* Font size */
+            border-radius: 8px;
+            /* Rounded edges */
+            padding: 10px;
+            /* Padding for spacing */
+            text-align: center;
+            /* Center text */
+            margin-left: 50px;
+            /* Margin to the left */
+            margin-right: 50px;
+            /* Margin to the right */
+        }
+    </style>
 </head>
 
-<body>
+<body style="min-height: 100vh; display: flex; flex-direction: column;">
 
     <div>
         <div class="navbar">
-            <h1 class="logo" style="font-size: 40px;">TickeTok </h1>
+            <h1 class="logo" style="font-size: 40px;">E-ticketing </h1>
             <ul style="font-size: 15px;">
                 <li><a href="#">Hi, <?= $admin ?></li>
                 <li><a href="#" id="addBtn">Create Event</a></li>
@@ -61,6 +81,7 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
     <?php if (!$cards_data) : ?>
         <div>
             <p class="box">No Events at the moments!</p>
+            <div style="flex-grow:1"></div>
         </div>
     <?php else : ?>
         <!-- Start of Filter & Search Container -->
@@ -164,16 +185,18 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
         </div>
     <?php endif; ?>
 
+    <div style="flex-grow:1"></div>
+
     <!--Modal for Adding Events-->
     <div class="modal" id="addevent">
         <div class="form-box">
             <h1>Add Event</h1>
             <form method="POST" action="../assets/php/admin-action.php" enctype="multipart/form-data">
-                <div class="form-field">
+                <div class="input-field">
                     <label>Event Name:</label>
                     <input type="text" name="event_name" placeholder="Event Name">
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <label>Event type:</label>
                     <select name="event_type">
                         <option value="Entertainment">Entertainment</option>
@@ -184,42 +207,42 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
                     </select>
                 </div>
 
-                <div class="form-field">
+                <div class="input-field">
                     <label>Event Duration:</label>
                     <select name="event_duration" id="event_duration">
                         <option value="one_day">One-Day Event</option>
                         <option value="date_range">Event with Date Range</option>
                     </select>
                 </div>
-                <div class="form-field" id="date_field">
+                <div class="input-field" id="date_field">
                     <label>Event Date:</label>
                     <input type="date" name="date" placeholder="Event Date" min="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d', strtotime('+1 year')) ?>">
                 </div>
-                <div class="form-field" id="from_date_field" style="display: none;">
+                <div class="input-field" id="from_date_field" style="display: none;">
                     <label>From Date:</label>
                     <input type="date" name="from_date" placeholder="From Date" min="<?= date('Y-m-d'); ?>" max="<?= date('Y-m-d', strtotime('+1 year')); ?>">
                 </div>
-                <div class="form-field" id="to_date_field" style="display: none;">
+                <div class="input-field" id="to_date_field" style="display: none;">
                     <label>To Date:</label>
                     <input type="date" name="to_date" placeholder="To Date" min="<?= date('Y-m-d'); ?>" max="<?= date('Y-m-d', strtotime('+1 year')); ?>">
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <label>Event Venue:</label>
                     <input type="text" name="venue" placeholder="Venue">
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <label>Event Time:</label>
                     <input type="time" name="time" placeholder="Time">
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <label>Ticket Price:</label>
                     <input type="number" name="ticket_price" placeholder="Ticket Price">
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <label>Tickets Available:</label>
                     <input type="number" name="tickets_available" placeholder="Tickets Available">
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <input type="file" name="banner" accept="image/*">
                 </div>
                 <div class="btn-field">
@@ -236,39 +259,39 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
             <h2 id="event-name-edt"></h2>
             <form method="POST" action="../assets/php/admin-action.php">
                 <input type="hidden" name="eventId" value="<?= $card['id'] ?>">
-                <div class="form-field">
+                <div class="input-field">
                     <label>Event Name:</label>
                     <input type="text" name="event_name" placeholder="Event Name" value="<?= $card['event_name'] ?>">
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <label for="date">Date:</label>
                     <input type="date" name="date" value="" min="<?= date('Y-m-d'); ?>" max="<?= date('Y-m-d', strtotime('+1 year')); ?>">
                 </div>
 
-                <div class="form-field">
+                <div class="input-field">
                     <label for="from_date">From Date:</label>
                     <input type="date" name="from_date" value="" min="<?= date('Y-m-d'); ?>" max="<?= date('Y-m-d', strtotime('+1 year')); ?>">
                 </div>
 
-                <div class="form-field">
+                <div class="input-field">
                     <label for="to_date">To Date:</label>
 
                     <input type="date" name="to_date" value="" min="<?= date('Y-m-d'); ?>" max="<?= date('Y-m-d', strtotime('+1 year')); ?>">
                 </div>
 
-                <div class="form-field">
+                <div class="input-field">
                     <label>Event Venue:</label>
                     <input type="text" name="venue" placeholder="Venue" value="<?= $card['venue'] ?>">
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <label>Event Time:</label>
                     <input type="time" name="time" placeholder="Time" value="<?= $card['time'] ?>">
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <label>Tickets price:</label>
                     <input type="number" name="ticket_price" placeholder="Ticket Price" value="<?= $card['ticket_price'] ?>">
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <label>Tickets capacity:</label>
                     <input readonly type="number" name="ticket_capacity" placeholder="Tickets Available" value="<?= $card['tickets_capacity'] ?>">
 
