@@ -1,106 +1,131 @@
-const username = document.querySelector('[name="username"]');
-const email = document.querySelector('[name="email"]');
-const contact = document.querySelector('[name="contact"]');
-const password = document.querySelector('[name="password"]');
-const confirm_password = document.querySelector('[name="confirm_password"]');
-const signUpForm = document.getElementById('signupForm');
-
-const setError = (element, message) => {
-  const inputField = element.parentElement;
-  const errorDisplay = inputField.querySelector('.error');
-
-  inputField.classList.add('error');
-  inputField.classList.remove('success');
-  errorDisplay.innerText = message;
-
+// Select form elements
+const signupForm = document.querySelector("#signupForm");
+// Create an object with all elements needed from the form
+const formElements = {
+  formType: signupForm.querySelector('[name="formType-signup"]'),
+  username: signupForm.querySelector('[name="username"]'),
+  email: signupForm.querySelector('[name="email"]'),
+  contact: signupForm.querySelector('[name="contact"]'),
+  password: signupForm.querySelector('[name="password"]'),
+  confirmPassword: signupForm.querySelector('[name="confirm_password"]'),
+  message: document.querySelector('#signup small'),
 };
 
-const setSuccess = element => {
-  const inputField = element.parentElement;
-  const errorDisplay = inputField.querySelector('.error');
-
-  errorDisplay.innerText = '';
-  inputField.classList.add('success');
-  inputField.classList.remove('error');
+// Set validation patterns for each input field
+const patterns = {
+  username: /^[a-zA-Z\s]{4,22}$/,
+  email: /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+  contact: /^(\+254|0)?[071]\d{8}$/,
+  password: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/,
+  confirmPassword: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/
 };
 
-const isEmailValid = element => {
-  const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return re.test(String(element).toLowerCase());
+
+// Set error messages for each input field
+const messages = {
+  username: 'Username should only contain letters and be between 4 and 22 characters in length.',
+  email: 'Email is not valid.',
+  contact: 'Contact number must begin with +254 or 0 then followed by 1 or 7, and other 7 digits',
+  password: 'Password must have at least 8 characters that include at least 1 lowercase character, 1 uppercase character, 1 number, and 1 special character.',
+  confirmPassword: 'Passwords do not match.',
 };
 
-const isContactValid = element => {
-  const re = /^(\+254|0)?[071]\d{8}$/;
-  return re.test(String(element));
+// Function to check if input value is required
+const isRequired = value => Boolean(value);
+
+// Function to validate input
+// Check if input value is required and matches the pattern
+// If not, it shows error
+const validateInput = (input, pattern, message) => {
+  const value = input.value.trim();
+  if (!isRequired(value)) {
+    showError(input, `${input.name} cannot be blank.`);
+    return false;
+  } else if (!pattern.test(value)) {
+    showError(input, message);
+    return false;
+  } else {
+    showSuccess(input);
+    return true;
+  }
 };
 
-const isPasswordValid = element => {
-  const re = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
-  return re.test(String(element));
+// Function to show validation errors
+// Changes the class of the form field and displays an error message
+const showError = (element, message) => {
+  const formField = element.parentElement;
+  formField.classList.remove('success');
+  formField.classList.add('error');
+  formField.querySelector('.error').innerText = message;
 };
 
-const validateInputs = () => {
-  const usernameValue = username.value.trim();
-  const emailValue = email.value.trim();
-  const contactValue = contact.value.trim();
-  const passwordValue = password.value.trim();
-  const confirm_passwordValue = confirm_password.value.trim();
+// Function to show validation success
+// Changes the class of the form field and clears any error message
+const showSuccess = element => {
+  const formField = element.parentElement;
+  formField.classList.remove('error');
+  formField.classList.add('success');
+  formField.querySelector('.error').innerText = '';
+};
+
+// Function to validate form
+// Iterates over each form field and checks if it is valid
+// Checks if password and confirm password fields match
+const validateForm = () => {
   let isValid = true;
-
-  if (usernameValue === '') {
-    setError(username, 'Username is required.');
-    isValid = false;
-  } else {
-    setSuccess(username);
+  for (let name in formElements) {
+    if (patterns[name]) {
+      isValid &= validateInput(formElements[name], patterns[name], messages[name]);
+    }
   }
-
-  if (emailValue === '') {
-    setError(email, 'Email is required');
+  if (formElements.password.value !== formElements.confirmPassword.value) {
+    showError(formElements.confirmPassword, messages.confirmPassword);
     isValid = false;
-  } else if (!isEmailValid(emailValue)) {
-    setError(email, 'Provide a valid email address.');
-    isValid = false;
-  } else {
-    setSuccess(email);
   }
-
-  if (contactValue === '') {
-    setError(contact, 'Contact is required');
-    isValid = false;
-  } else if (!isContactValid(contactValue)) {
-    setError(contact, 'contact number must begin with +254 or 0 then followed by 1 or 7, and 7 digits');
-    isValid = false;
-  } else {
-    setSuccess(contact);
-  }
-
-  if (passwordValue === '') {
-    setError(password, 'Password is required');
-    isValid = false;
-  } else if (!isPasswordValid(passwordValue)) {
-    setError(password, 'Password must have at least 8 characters that include at least 1 lowercase character, 1 uppercase character, 1 number, and 1 special character.');
-    isValid = false;
-  } else {
-    setSuccess(password);
-  }
-
-  if (confirm_passwordValue === '') {
-    setError(confirm_password, 'Please confirm your password.');
-    isValid = false;
-  } else if (confirm_passwordValue !== passwordValue) {
-    setError(confirm_password, "Passwords don't match!");
-    isValid = false;
-  } else {
-    setSuccess(confirm_password);
-  }
-
   return isValid;
 };
 
-signUpForm.addEventListener('submit', e => {
+// Function to display message
+// Displays a message on the form, success or error
+const displaySuccessMessageOnSignUp = (message, isError = false) => {
+  formElements.message.innerHTML = `
+    <div class="alert ${isError ? 'error' : 'success'}">
+      <p class="text">
+        <strong>${message}</strong>
+      </p>
+    </div>`;
+};
+
+// Handle form submission
+// On form submit, clears previous messages, validates form, and sends data to server
+signupForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (validateInputs()) {
-    // All inputs are valid, proceed with form submission
-    signUpForm.submit();
+  formElements.message.innerHTML = ''; // Clear previous messages
+
+  if (validateForm()) {
+    const requestBody = {
+      formType: formElements.formType.value,
+      username: formElements.username.value,
+      email: formElements.email.value,
+      contact: formElements.contact.value,
+      password: formElements.password.value,
+    };
+
+    try {
+      const response = await fetch('assets/php/action.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      const responseData = await response.json();
+      if (response.ok) {
+        displaySuccessMessageOnSignUp(responseData.message, !responseData.success);
+      } else {
+        throw new Error('Network response was not OK.');
+      }
+    } catch (error) {
+      displaySuccessMessageOnSignUp('Some error occurred. Please try again.', true);
+    }
   }
 });
