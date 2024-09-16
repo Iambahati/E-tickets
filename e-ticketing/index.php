@@ -2,16 +2,24 @@
 
 require_once 'utils.php';
 
-switch ($_SESSION['userType']) {
-    case 'client':
-        Utils::redirect_to('interfaces/events.php');
-        break;
-    case 'admin':
-        Utils::redirect_to('interfaces/admin.php');
-        break;
-    default:
-        break;
+if (isset($_SESSION['userType'])) {
+    switch ($_SESSION['userType']) {
+        case 'client':
+            Utils::redirect_to('interfaces/events.php');
+            break;
+        case 'admin':
+            Utils::redirect_to('interfaces/admin.php');
+            break;
+        default:
+            // Handle the default case if needed
+            break;
+    }
+} else {
+    // Handle the case where 'userType' is not set, if needed
+    // For example, redirect to a login page or do nothing
+    // Utils::redirect_to('login.php');
 }
+
 
 // coalescing operator `??`
 // checks if a variable exists and is not null,
@@ -69,23 +77,23 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
             <small></small>
             <form id="signupForm">
                 <input type="hidden" name="formType-signup" value="signup">
-                <div class="form-field">
+                <div class="input-field">
                     <input type="text" name="username" placeholder="Username">
                     <div class="error"></div>
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <input type="text" name="email" placeholder="Email">
                     <div class="error"></div>
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <input type="text" name="contact" placeholder="Contact">
                     <div class="error"></div>
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <input type="text" name="password" placeholder="Password">
                     <div class="error"></div>
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <input type="text" name="confirm_password" placeholder="Confirm Password">
                     <div class="error"></div>
                 </div>
@@ -106,11 +114,11 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
             <small></small>
             <form id="signinForm">
                 <input type="hidden" name="formType-signin" value="signin">
-                <div class="form-field">
+                <div class="input-field">
                     <input type="text" id="signinemail" name="signin-email" placeholder="Email">
                     <div class="error"></div>
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <input type="text" id="signinpassword" name="signin-password" placeholder="Password">
                     <div class="error"></div>
                 </div>
@@ -159,15 +167,15 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
             <small></small>
             <form id="contactForm">
                 <input type="hidden" name="formType-contact" value="contact">
-                <div class="form-field">
+                <div class="input-field">
                     <input type="text" name="email_from" placeholder="Your email">
                     <div class="error"></div>
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <input type="text" name="subject" placeholder="Subject:">
                     <div class="error"></div>
                 </div>
-                <div class="form-field">
+                <div class="input-field">
                     <textarea type="text" name="message" placeholder="Message"></textarea>
                     <div class="error"></div>
                 </div>
