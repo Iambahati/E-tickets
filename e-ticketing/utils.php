@@ -11,8 +11,11 @@ require_once 'session.php';
  *
  */
 
+
 class Utils
 {
+    // static modifier in php is used to access properties of method
+    // directly without instantiating it.
     /**
      * Check and sanitize input data and remove invalid characters
      * @param string $input_data The input data to sanitize.
@@ -160,7 +163,7 @@ class Utils
     public static function redirect_with_message(string $url, string $type, string $msg): void
     {
         // Store the message in the $_SESSION superglobal using the showMessage() function.
-        $_SESSION[$type] = self::showMessage($type, $msg);
+        $_SESSION[$type] = self::showMessage($type, $msg); 
         // Use the redirect_to() function to redirect the user to the given URL.
         self::redirect_to($url);
     }
