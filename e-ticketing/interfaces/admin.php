@@ -86,7 +86,7 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
     <?php else : ?>
         <!-- Start of Filter & Search Container -->
         <div class="filter-search-container">
-            <div class="filter-container">
+            <!-- <div class="filter-container">
                 <label for="event-filter">Sorted By:</label>
                 <select name="event-filter">
                     <option value="Entertainment">Entertainment</option>
@@ -95,14 +95,15 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
                     <option value="Sports">Sports</option>
                     <option value="Free events">Free events</option>
                 </select>
-            </div>
+            </div> -->
             <div class="search-container">
-                <label>Search:</label> <input type="text" id="searchInput" class="search-input">
+                <label style="   margin-left: 50px; margin-right: 10px; color: #ffffff; font-size: 16px;">Search:</label> <input type="text" id="searchInput" class="search-input">
             </div>
         </div>
         <!-- End of Filter & Search Container -->
         <?= str_repeat('<br>', 4); ?>
         <p class="box">Events Line up</p>
+        <?= str_repeat('<br>', 3); ?>
         <!-- this row is the container with the card-->
         <div class="card-container" style="margin-left: 130px; margin-bottom: 100px">
             <?php $rowCount = 0; ?>
@@ -168,7 +169,7 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
                                         <br><br>
                                         <button id="deleteBtn" class="btn btn-danger">Delete</button>
                                         <br><br>
-                                        <a href="reports.php?evid=<?= $card['id'] ?>" class="btn btn-success">View Report</a>
+                                        <!-- <a href="reports.php?evid=<?= $card['id'] ?>" class="btn btn-success">View Report</a> -->
                                     </div>
                                 </div>
                             </div>

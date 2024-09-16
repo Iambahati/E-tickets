@@ -10,7 +10,7 @@ $action = new Admin();
 
 if (isset($_POST["addEventBtn"])) {
     try {
-        $imageDir = '../images/banners/';
+        $imageDir = '../images/uploads/';
         $imageName = $_FILES['banner']['name'];
 
         // Generate a unique file name
@@ -18,7 +18,7 @@ if (isset($_POST["addEventBtn"])) {
         $uniqueName = uniqid() . '.' . $fileExtension;
 
         $imagePath = $imageDir . $uniqueName;
-        $thumbnailPath = '../assets/images/banners/' . $uniqueName;
+        $thumbnailPath = '../assets/images/uploads/' . $uniqueName;
 
         // Define the allowed banner extensions
         $allowedExtensions = ['jpg', 'jpeg', 'png'];
