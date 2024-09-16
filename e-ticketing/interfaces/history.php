@@ -46,7 +46,7 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
 
   <div>
     <div class="navbar">
-      <h1 class="logo" style="font-size: 40px;">TickeTok </h1>
+      <h1 class="logo" style="font-size: 40px;">E-ticketing </h1>
       <ul style="font-size: 15px;">
         <li><a href="#">Hi, <?= $currentlyLoggedInUser ?></li>
         <li><a href="events.php">View events</a></li>

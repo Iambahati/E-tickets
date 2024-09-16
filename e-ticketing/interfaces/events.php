@@ -31,7 +31,7 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
 <head>
     <meta charset="x-UTF-16LE-BOM">
     <meta name="viewport" content="width=device=width, initial-scale=1.0">
-    <title>TickeTok </title>
+    <title>E-ticketing </title>
     <link href="https://fonts.googleapis.com/css?family=Bad+Script|Comfortaa|Amiri|Cormorant+Garamond|Rancho|Fredericka+the+Great|Handlee|Homemade+Apple|Philosopher|Playfair+Display+SC|Reenie+Beanie|Unna|Zilla+Slab" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/modals.css">
@@ -64,7 +64,7 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
 <body style="min-height: 100vh; display: flex; flex-direction: column;">
 
     <div class="navbar">
-        <h1 class="logo" style="font-size: 40px;">TickeTok </h1>
+        <h1 class="logo" style="font-size: 40px;">E-ticketing </h1>
         <ul style="font-size: 15px;">
             <li><a href="#">Hi, <?= $currentlyLoggedInUser ?></li>
             <li><a href="history.php">My History</a></li>
