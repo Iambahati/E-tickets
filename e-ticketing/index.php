@@ -122,7 +122,7 @@ unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
                     <input type="text" id="signinpassword" name="signin-password" placeholder="Password">
                     <div class="error"></div>
                 </div>
-                <ul class="inline-links">
+                <ul class="inline-links" style="margin-bottom:20px; text-align: left;">
                     <li class="inline-links-item">
                         <a href="#"><span class="text">Forgotten Password?</span></a>
                     </li>
