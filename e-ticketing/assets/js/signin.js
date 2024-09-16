@@ -1,66 +1,83 @@
-const signinForm = document.getElementById('signinForm');
-const signinEmail = document.querySelector('[name="signinemail"]');
-const signinPassword = document.querySelector('[name="signinpassword"]');
+// Get the elements
+const form = document.querySelector('#signinForm');
+const emailEl = form.elements['signin-email'];
+const passwordEl = form.elements['signin-password'];
+const msgEl = document.querySelector('#signin small');
 
-const setError2 = (element, message) => {
-  const inputField = element.parentElement;
-  const errorDisplay = inputField.querySelector('.error');
-
-  errorDisplay.innerText = message;
-  inputField.classList.add('error');
-  inputField.classList.remove('success');
+// The URLs for redirection based on the response message
+const URLs = {
+  admin: 'http://127.0.0.1/ticketingapp/interfaces/admin.php',
+  client: 'http://127.0.0.1/ticketingapp/interfaces/events.php',
 };
 
-const setSuccess2 = element => {
-  const inputField = element.parentElement;
-  const errorDisplay = inputField.querySelector('.error');
+// Validate input and show error or success
+const validateAndShowStatus = (input, pattern, blankMsg, invalidMsg) => {
+  const value = input.value.trim();
+  const formField = input.parentElement;
+  const errorEl = formField.querySelector('.error');
 
-  errorDisplay.innerText = '';
-  inputField.classList.add('success');
-  inputField.classList.remove('error');
-};
+  formField.classList.remove('error', 'success');
+  errorEl.innerText = '';
 
-const isValidEmail2 = email => {
-  const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return re.test(String(email).toLowerCase());
-};
-
-const isPasswordValid2 = element => {
-  const re = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
-  return re.test(String(element));
-};
-
-const validateInputs2 = () => {
-  const sEmailValue = signinEmail.value.trim();
-  const sPasswordValue = signinPassword.value.trim();
-  let isValid = true;
-
-  if (sEmailValue === '') {
-    setError2(signinEmail, 'Email is required');
-    isValid = false;
-  } else if (!isValidEmail2(sEmailValue)) {
-    setError2(signinEmail, 'Provide a valid email address.');
-    isValid = false;
+  if (!value) {
+    formField.classList.add('error');
+    errorEl.innerText = blankMsg;
+    return false;
+  } else if (!pattern.test(value)) {
+    formField.classList.add('error');
+    errorEl.innerText = invalidMsg;
+    return false;
   } else {
-    setSuccess2(signinEmail);
+    formField.classList.add('success');
+    return true;
   }
-
-  if (sPasswordValue === '') {
-    setError2(signinPassword, 'Password is required');
-    isValid = false;
-  } else if (!isPasswordValid2(sPasswordValue)) {
-    setError2(signinPassword, 'Password must have at least 8 characters that include at least 1 lowercase character, 1 uppercase character, 1 number, and 1 special character.');
-    isValid = false;
-  } else {
-    setSuccess2(signinPassword);
-  }
-
-  return isValid;
 };
 
-signinForm.addEventListener('submit', e => {
+// Display a message in the form
+const displayMessage = (msg, isError = false) => {
+  msgEl.innerHTML = `
+    <div class="alert ${isError ? 'error' : 'success'}">
+        <p class="text">
+            <strong>${msg}</strong>
+        </p>
+    </div>`;
+};
+
+// Handle form submission
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (validateInputs2()) {
-    signinForm.submit();
+
+  msgEl.innerHTML = '';
+
+  const isEmailValid = validateAndShowStatus(emailEl, /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/, 'Email cannot be blank.', 'Email is not valid.');
+  const isPasswordValid = validateAndShowStatus(passwordEl, /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/, 'Password cannot be blank.', 'Password must have at least 8 characters that include at least 1 lowercase character, 1 uppercase character, 1 number, and 1 special character.');
+
+  if (!isEmailValid || !isPasswordValid) return;
+
+  const data = {
+    formType: 'signin',
+    email: emailEl.value,
+    password: passwordEl.value,
+  };
+
+  try {
+    const response = await fetch('assets/php/action.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (response.ok) {
+      const { success, message } = await response.json();
+      if (success) {
+        const URL = URLs[message];
+        if (URL) window.location.href = URL;
+        else displayMessage(`Case ${message} not implemented yet`, true);
+      } else {
+        displayMessage(message, true);
+      }
+    }
+  } catch {
+    displayMessage('An error occurred during the network call.', true);
   }
 });

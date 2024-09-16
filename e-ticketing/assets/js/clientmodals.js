@@ -1,66 +1,69 @@
 //Buying Tickets
-var buyingModal = document.getElementById("buying");
-var buyingBtn = document.getElementById("buyingBtn");
-var buyingClose = document.getElementById("buyingClose");
+const buyingModal = document.getElementById("buying");
+const buyingBtns = document.querySelectorAll("#buyingBtn");
+const buyingClose = document.getElementById("buyingClose");
 
-//Function to open modal
-buyingBtn.onclick = function() {
-   buyingModal.style.display = "block";
+// Function to open modal
+buyingBtns.forEach(buyingBtn => {
+   buyingBtn.addEventListener("click", (event) => {
+       const card = event.target.closest(".column-item");
+       const name = card.querySelector(".card-title").textContent;
+       const ticketPrice = card.querySelector("ul li:nth-child(4)").textContent.slice(18).trim();
+       const eventId = card.closest("td").dataset.id;
+
+       // Select the form and its fields in the modal and set their values
+       const form = buyingModal.querySelector("form");
+       form.querySelector('input[name="eventId"]').value = eventId;
+       form.querySelector('input[name="ticket_price"]').value = ticketPrice.replace(/[^\d]/g, "");
+       buyingModal.querySelector("#event-name-buy").textContent = `Purchase ticket(s) for "${name}" event`;
+
+       // Display the modal
+       buyingModal.style.display = "block";
+
+       // Call updateTotalPrice to set the initial total price in the modal
+       updateTotalPrice();
+   });
+});
+
+const increaseQuantityBtns = document.querySelectorAll(".increase-quantity");
+const decreaseQuantityBtns = document.querySelectorAll(".decrease-quantity");
+
+increaseQuantityBtns.forEach(btn => {
+   btn.addEventListener("click", (event) => {
+       const card = event.target.closest(".quantity-selector");
+       const quantityInput = card.querySelector(".quantity");
+       const currentQuantity = parseInt(quantityInput.value);
+       if (currentQuantity < 5) {
+           quantityInput.value = currentQuantity + 1;
+           updateTotalPrice();
+       }
+   });
+});
+
+decreaseQuantityBtns.forEach(btn => {
+   btn.addEventListener("click", (event) => {
+       const card = event.target.closest(".quantity-selector");
+       const quantityInput = card.querySelector(".quantity");
+       const currentQuantity = parseInt(quantityInput.value);
+       if (currentQuantity > 1) {
+           quantityInput.value = currentQuantity - 1;
+           updateTotalPrice();
+       }
+   });
+});
+
+function updateTotalPrice() {
+   const quantity = parseInt(buyingModal.querySelector(".quantity").value);
+   const price = parseFloat(buyingModal.querySelector('input[name="ticket_price"]').value);
+   const total = quantity * price;
+   buyingModal.querySelector('#total-price-display').textContent = total.toFixed(2);
 }
-//Function to close modal
-buyingClose.onclick = function() {
+// Function to close modal
+buyingClose.onclick = function () {
    buyingModal.style.display = "none";
-}
-//Function to close modal when clicked outside
-window.onclick = function(event) {
-   if (event.target === ByteLengthQueuingStrategyModal) {
-      buyingModal.style.display = "none";
-   }
-}
-
-//QR Code 
-
-var qrModal = document.getElementById("qr");
-var qrCodeBtn = document.getElementById("qrCodeBtn");
-var qrClose = document.getElementById("qrClose");
-
-//Function to open modal
-qrCodeBtn.onclick = function() {
-   qrModal.style.display = "block";
-}
-//Function to close modal
-qrClose.onclick = function() {
-   qrModal.style.display = "none";
-}
-//Function to close modal when clicked outside
-window.onclick = function(event) {
-   if (event.target === ByteLengthQueuingStrategyModal) {
-      qrModal.style.display = "none";
-   }
-}
+};
 
 
 
 
-//Spinner 
- // Function to show the spinner and disable the button
- function showSpinner() {
-    document.getElementById('spinner').style.display = 'block';
-    document.getElementById('myButton').disabled = true;
-  }
 
-  // Function to hide the spinner and enable the button
-  function hideSpinner() {
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('myButton').disabled = false;
-  }
-
-  // Add event listener to the button
-  document.getElementById('myButton').addEventListener('click', function() {
-    showSpinner();
-
-    // Simulating some asynchronous operation
-    setTimeout(function() {
-      hideSpinner();
-    }, 2000); // Hide spinner after 2 seconds (replace with your own logic)
-  });
