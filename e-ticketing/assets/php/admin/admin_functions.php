@@ -142,4 +142,19 @@ class Admin extends Db
 		$result = $stmt->fetch(PDO::FETCH_ASSOC);
 		return $result['event_name'];
 	}
+
+	
+	/**
+	 * @param string $tablename
+	 * @return array
+	 * @desc Returns count of Rows based on the method parameters
+	 */
+	public function totalCount($tableName)
+	{
+		$sql = "SELECT COUNT(*) FROM $tableName";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute();
+		$count = $stmt->fetchColumn();
+		return $count;
+	}
 }

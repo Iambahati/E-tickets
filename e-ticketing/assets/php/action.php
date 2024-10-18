@@ -8,217 +8,152 @@ $action = new Client();
 
 $reservations = new Reservations();
 
-// Decode the request body JSON data into an associative array
-$requestBody = json_decode(file_get_contents('php://input'), true);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $requestBody['formType'] == 'signup') {
-
-    $response = null;
+//Handle [register] request of buyer user
+if (isset($_POST["client-signup-btn"])) {
     try {
-        // Sanitize the inputs
-        $name = isset($requestBody['username']) ? Utils::sanitizeInput($requestBody['username']) : '';
-        $email = isset($requestBody['email']) ? Utils::sanitizeInput($requestBody['email']) : '';
-        $contact = isset($requestBody['contact']) ? Utils::sanitizeInput($requestBody['contact']) : '';
-        $password = isset($requestBody['password']) ? Utils::sanitizeInput($requestBody['password']) : '';
-        $hpass = password_hash($password, PASSWORD_DEFAULT);
 
-        // Defined an array to hold the error messages
-        $errorMessages = [];
-
-        if (empty($name)) {
-            $errorMessages[] = 'Username cannot be blank!';
-        }
-        if (empty($email)) {
-            $errorMessages[] = 'Email cannot be blank!';
-        }
-        if (empty($password)) {
-            $errorMessages[] = 'Password cannot be blank!';
-        }
-        if (empty($contact)) {
-            $errorMessages[] = 'Contact cannot be blank!';
+        /**
+         *  ------------------------
+         *   Verifying CSRF token
+         *  ------------------------
+         */
+        if (!Utils::verifyCsrfToken()) {
+            Utils::redirect_with_message('../../index.php', 'error', 'Request could not be validated.');
         }
 
-        if (!empty($errorMessages)) {
-            // Construct error messages by iterating through the array and appending them
-            $errorMessage = '';
-            foreach ($errorMessages as $message) {
-                $errorMessage .= $message;
-            }
+        $fname = isset($_POST["fname"]) && !empty($_POST["fname"]) ? Utils::sanitizeInput(ucwords($_POST["fname"])) : Utils::redirect_with_message('../../buyer_signup.php', 'error', 'First name cannot be blank!');
+        $lname = isset($_POST["lname"]) && !empty($_POST["lname"]) ? Utils::sanitizeInput(ucwords($_POST["lname"])) : Utils::redirect_with_message('../../buyer_signup.php', 'error', 'Last name cannot be blank!');
+        $email = isset($_POST["email"]) && !empty($_POST["email"]) ? strtolower(Utils::sanitizeInput($_POST["email"])) : Utils::redirect_with_message('../../buyer_signup.php', 'error', 'Email cannot be blank!');
+        $pass = isset($_POST["password"]) && !empty($_POST["password"]) ? Utils::sanitizeInput($_POST["password"]) : Utils::redirect_with_message('../../buyer_signup.php', 'error', 'Password cannot be blank!');
+        $phone = isset($_POST["phone"]) && !empty($_POST["phone"]) ? Utils::sanitizeInput($_POST["phone"]) : Utils::redirect_with_message('../../buyer_signup.php', 'error', 'Phone cannot be blank!');
 
-            // Prepare the response with the error messages
-            $response = [
-                'success' => false,
-                'message' => $errorMessage
-            ];
-        } else {
-            // Check if a user with the provided email already exists
-            $userExists = $action->user_exists($email);
+        $hpass = password_hash($pass, PASSWORD_DEFAULT);
 
-            if ($userExists && $userExists['email'] === $email) {
-                // Construct response if a user with the email already exists
-                $response = [
-                    'success' => false,
-                    'message' => 'A user with this email is already registered'
-                ];
-            } else {
-                // Create an account for a user
-                if ($action->createUserAccount($name, $email, $contact, $hpass)) {
-                    // Construct success response
-                    $response = [
-                        'success' => true,
-                        'message' => 'Account created successfully. Please login'
-                    ];
-                } else {
-                    // Construct response if account creation fails
-                    $response = [
-                        'success' => false,
-                        'message' => 'Failed to create account. Please try again.'
-                    ];
-                }
-            }
+        $userExists = $action->user_exists($email);
+        if ($userExists && $userExists['email'] === $email) {
+            Utils::redirect_with_message('../../buyer_signup.php', 'error', 'A user with this email is already registered');
+            return;
+        }
+
+        // Call the [registerBuyerAcc] method
+        if ($action->createUserAccount($fname, $lname, $email, $phone, $hpass, '3')) {
+            Utils::redirect_with_message('../../buyer_signin.php', 'success', 'Account created successfully. Please login to continue');
+            return;
         }
     } catch (Exception $e) {
-        $response = [
-            'success' => false,
-            'message' => 'Oops... Some error occurred: ' . $e->getMessage()
-        ];
+        // Handle exceptions by returning an error mailBody to user
+        Utils::redirect_with_message('../../buyer_signup.php', 'error', 'Opps...Some error occurred: ' . $e->getMessage());
     }
-    echo json_encode($response);
-    die();
 }
 
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $requestBody['formType'] == 'signin') {
-    $response = null;
-
+//Handle [login] request of buyer user
+if (isset($_POST["client-signin-btn"])) {
     try {
-        $email = isset($requestBody['email']) ? Utils::sanitizeInput($requestBody['email']) : '';
-        $pass = isset($requestBody['password']) ? Utils::sanitizeInput($requestBody['password']) : '';
 
-        $errorMessages = [];
-
-        if (empty($email)) {
-            $errorMessages[] = 'Email cannot be blank!';
+        /**
+         *  ------------------------
+         *   Verifying CSRF token
+         *  ------------------------
+         */
+        if (!Utils::verifyCsrfToken()) {
+            Utils::redirect_with_message('../../buyer_signin.php', 'error', 'Request could not be validated.');
         }
 
-        if (empty($pass)) {
-            $errorMessages[] = 'Password cannot be blank!';
-        }
+        $email = isset($_POST["email"]) && !empty($_POST["email"]) ? Utils::sanitizeInput($_POST["email"]) :  Utils::redirect_with_message('../../buyer_signin.php',  'error', 'Email cannot be blank!');
+        $pass = isset($_POST["password"]) && !empty($_POST["password"]) ? Utils::sanitizeInput($_POST["password"]) : Utils::redirect_with_message('../../buyer_signin.php', 'error', 'Password cannot be blank!');
 
-        if (!empty($errorMessages)) {
-            $errorMessage = '';
-            foreach ($errorMessages as $message) {
-                $errorMessage .= $message;
-            }
-            $response = [
-                'success' => false,
-                'message' => $errorMessage
-            ];
-        }
-        // Call the [loginIntoAccount] method for a user
+        // Call the [login] method for buyer user
         $result = $action->loginIntoAccount($email);
 
-        $isAdmin = ($result['is_admin'] == 1) ? 'true' : 'false';
+        if (!empty($result)) {
+            // If passwords match, login the user and redirect to the appropriate dashboard
+            if (password_verify($pass, $result['password'])) {
+                $_SESSION['clientName'] = $result['first_name'] . ' ' . $result['last_name'];
+                $_SESSION['userId'] = $result['id'];
+                $_SESSION['accRole'] = $result['role'];
+                // $logger->log('User  "' . $_SESSION['staffName'] . '" has logged in', 'Log In', $_SESSION['svcNo']);
 
-        if (!empty($result) && password_verify($pass, $result['password'])) {
-
-            $isAdmin = ($result['is_admin'] == 1) ? true : false;
-
-            // User provided correct password
-            $redirectNode = $isAdmin ? 'admin' : 'client';
-            $_SESSION['userType'] = $redirectNode;
-            switch ($_SESSION['userType']) {
-                case 'admin':
-                    $_SESSION['admin'] =  $result['username'];
-                    $_SESSION['adminEmail'] = $email;
-                    break;
-                case 'client':
-                    $_SESSION['client'] = $result['username'];
-                    $_SESSION['clientEmail'] = $email;
-                    break;
-                default:
-                    break;
+                switch ($_SESSION['accRole']) {
+                    case 1:
+                        Utils::redirect_to("../../interfaces/admin.php");
+                        break;
+                    case 2:
+                        Utils::redirect_to("../../interfaces/org-dashboard.php");
+                        break;
+                    case 3:
+                        Utils::redirect_to("../../interfaces/events.php");
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                // If password doesn't match, redirect back to login page with error message
+                Utils::redirect_with_message('../../buyer_signin.php', 'error', 'Wrong email or password.');
             }
-
-            $response = [
-                'success' => true,
-                'message' => $redirectNode
-            ];
         } else {
-            // User provided incorrect email or password
-            $response = [
-                'success' => false,
-                'message' => 'Invalid email or password.'
-            ];
+            // If no such user exists, redirect back to login page with error message
+            Utils::redirect_with_message('../../buyer_signin.php', 'error', 'User not found.');
         }
     } catch (Exception $e) {
-        $response = [
-            'success' => false,
-            'message' => 'Oops... Some error occurred: ' . $e->getMessage()
-        ];
-        return;
+        // Handle exceptions by returning an error to the user
+        Utils::redirect_with_message('../../buyer_signin.php', 'error', 'Oops... Some error occurred: ' . $e->getMessage());
     }
-
-    echo json_encode($response);
-
-    die();
 }
 
 
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $requestBody['formType'] == 'contact') {
+//Handle [login] request of buyer user
+if (isset($_POST["client-signin-btn"])) {
     try {
-        $email = isset($requestBody["email_from"]) && !empty($requestBody["email_from"]) ? Utils::sanitizeInput($requestBody["email_from"]) : '';
-        $sub = isset($requestBody["subject"]) && !empty($requestBody["subject"]) ? Utils::sanitizeInput($requestBody["subject"]) : '';
-        $message = isset($requestBody["message"]) && !empty($requestBody["message"]) ? Utils::sanitizeInput($requestBody["message"]) : '';
 
-        $errorMessages = [];
-
-        if (empty($email)) {
-            $errorMessages[] = 'Email cannot be blank!';
+        /**
+         *  ------------------------
+         *   Verifying CSRF token
+         *  ------------------------
+         */
+        if (!Utils::verifyCsrfToken()) {
+            Utils::redirect_with_message('../../buyer_signin.php', 'error', 'Request could not be validated.');
         }
 
-        if (empty($sub)) {
-            $errorMessages[] = 'Subject cannot be blank!';
-        }
+        $email = isset($_POST["email"]) && !empty($_POST["email"]) ? Utils::sanitizeInput($_POST["email"]) :  Utils::redirect_with_message('../../buyer_signin.php',  'error', 'Email cannot be blank!');
+        $pass = isset($_POST["password"]) && !empty($_POST["password"]) ? Utils::sanitizeInput($_POST["password"]) : Utils::redirect_with_message('../../buyer_signin.php', 'error', 'Password cannot be blank!');
 
-        if (empty($message)) {
-            $errorMessages[] = 'Message cannot be blank!';
-        }
+        // Call the [login] method for buyer user
+        $result = $action->loginIntoAccount($email);
 
-        if (!empty($errorMessages)) {
-            $errorMessage = '';
-            foreach ($errorMessages as $message) {
-                $errorMessage .= $message;
+        if (!empty($result)) {
+            // If passwords match, login the user and redirect to the appropriate dashboard
+            if (password_verify($pass, $result['password'])) {
+                $_SESSION['clientName'] = $result['first_name'] . ' ' . $result['last_name'];
+                $_SESSION['userId'] = $result['id'];
+                $_SESSION['accRole'] = $result['role'];
+                // $logger->log('User  "' . $_SESSION['staffName'] . '" has logged in', 'Log In', $_SESSION['svcNo']);
+
+                switch ($_SESSION['accRole']) {
+                    case 1:
+                        Utils::redirect_to("../../interfaces/admin.php");
+                        break;
+                    case 2:
+                        Utils::redirect_to("../../interfaces/org-dashboard.php");
+                        break;
+                    case 3:
+                        Utils::redirect_to("../../interfaces/events.php");
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                // If password doesn't match, redirect back to login page with error message
+                Utils::redirect_with_message('../../buyer_signin.php', 'error', 'Wrong email or password.');
             }
-            $response = [
-                'success' => false,
-                'message' => $errorMessage
-            ];
-        }
-
-        $mailBody = "You have a new inquiry from" . $email . "<br><br>" . $message;
-
-        if (Mailer::sendMail("adm1n.tickectok@gmail.com", $sub, $mailBody)) {
-            $response = [
-                'success' => true,
-                'message' => 'We appreciate you contacting us. One of our colleagues will get back in touch with you soon!'
-            ];
         } else {
-            $response = [
-                'success' => false,
-                'message' => 'Email not sent. An error was encountered.'
-            ];
+            // If no such user exists, redirect back to login page with error message
+            Utils::redirect_with_message('../../buyer_signin.php', 'error', 'User not found.');
         }
     } catch (Exception $e) {
-        $response = [
-            'success' => false,
-            'message' => 'Oops... Some error occurred: ' . $e->getMessage()
-        ];
+        // Handle exceptions by returning an error to the user
+        Utils::redirect_with_message('../../buyer_signin.php', 'error', 'Oops... Some error occurred: ' . $e->getMessage());
     }
-
-    echo json_encode($response);
-    die();
 }
 
 if (isset($_POST["purchase-ticket-btn"])) {

@@ -1,218 +1,378 @@
 <?php
 
-require_once '../utils.php';
-
 require_once  '../assets/php/client_functions.php';
 
-if (!isset($_SESSION['client'])) {
+require_once '../utils.php';
+
+
+if (!isset($_SESSION['clientName']) && !isset($_SESSION['accRole'])) {
+
     Utils::redirect_to('../index.php');
 }
 
-$currentlyLoggedInUser = $_SESSION['client'];
+$fullname = $_SESSION['clientName'];
 
-// Create an instance of client
+$userId = $_SESSION['userId'];
+
+
 $interfaces = new Client();
 
-$cards_data = $interfaces->fetchEvents();
+$events_data = $interfaces->fetchEvents($userId);
+
+// $checkReservationsForAnEvent = $interfaces->fetchEvents();
 
 // coalescing operator `??`
 // checks if a variable exists and is not null,
 // and if it doesn't, it returns a default value
 $message = $_SESSION['success'] ?? $_SESSION['error'] ?? null;
 // `unset()` function destroys a variable. Once a variable is unset, it's no longer accessible
-unset($_SESSION['success'], $_SESSION['error'], $_SESSION['contactUsMessage']);
+unset($_SESSION['success'], $_SESSION['error']);
 
 ?>
 
-
-<!DOCTYPE Html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="x-UTF-16LE-BOM">
-    <meta name="viewport" content="width=device=width, initial-scale=1.0">
-    <title>E-ticketing </title>
-    <link href="https://fonts.googleapis.com/css?family=Bad+Script|Comfortaa|Amiri|Cormorant+Garamond|Rancho|Fredericka+the+Great|Handlee|Homemade+Apple|Philosopher|Playfair+Display+SC|Reenie+Beanie|Unna|Zilla+Slab" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/main.css">
-    <link rel="stylesheet" href="../assets/css/modals.css">
-    <link rel="stylesheet" href="../assets/css/modals.css">
-    <link rel="stylesheet" href="../assets/css/alerts.css">
-    <link rel="stylesheet" href="../assets/css/cards.css">
-    <link rel="stylesheet" href="../assets/css/footer.css">
-    <style>
-        .box {
-            color: grey;
-            /* Text color */
-            background-color: #ffffff;
-            /* White background */
-            font-size: 16px;
-            /* Font size */
-            border-radius: 8px;
-            /* Rounded edges */
-            padding: 10px;
-            /* Padding for spacing */
-            text-align: center;
-            /* Center text */
-            margin-left: 50px;
-            /* Margin to the left */
-            margin-right: 50px;
-            /* Margin to the right */
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizer Panel</title>
+    <link rel="stylesheet" href='../assets/css/dash.css'>
+    <!-- <link rel="stylesheet" href='../assets/css/card.css'> -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+
+
 </head>
 
-<body style="min-height: 100vh; display: flex; flex-direction: column;">
+<body>
+    <!-- =============Sidebar Start================ -->
+    <div class="sidebar">
+        <a href="org-dashboard.php" class="logo">
+            <img src="./img/logo-1.png" alt="" />
+            <span>E-</span>Ticketing
+        </a>
+        <ul class="side-menu">
+            <li class="active">
+                <a href="org-dashboard.php"><i class="bx bxs-dashboard"></i>Dashboard</a>
+            </li>
 
-    <div class="navbar">
-        <h1 class="logo" style="font-size: 40px;">E-ticketing </h1>
-        <ul style="font-size: 15px;">
-            <li><a href="#">Hi, <?= $currentlyLoggedInUser ?></li>
-            <li><a href="history.php">My History</a></li>
-            <li><a href="../assets/php/logout.php">Logout</a></li>
-        </ul>
+            <li>
+                <a href="../assets/php/logout.php" class="logout"><i class="bx bx-log-out-circle"></i>Logout</a>
+            </li>
+            <!-- <div class="side-menu">
+      <ul>
+        <li>
+          <a href="#"><i class="bx bx-moon"></i>Dark / Light</a>
+        </li>
+
+      </ul>
+    </div> -->
     </div>
-
-
-    <br><br>
-    <?= $message ?>
-
-
-    <?php if (!$cards_data) : ?>
-        <p class="box">No upcoming Events</p>
-        <div style="flex-grow:1"></div>
-    <?php else : ?>
-        <div>
-            <p class="box">Upcoming Events</p>
-            <?= str_repeat('<br>', 3); ?>
-
-            <!-- this row is the container with the card-->
-            <div class="card-container" style="margin-left: 50px; margin-bottom: 70px;">
-                <?php $rowCount = 0; ?>
-                <table class="cards-table">
-                    <?php foreach ($cards_data as $card) : ?>
-                        <?php if ($rowCount % 3 === 0) : ?>
-                            <tr>
-                            <?php endif; ?>
-                            <td data-id="<?= $card['id'] ?>">
-                                <div class="column-item">
-                                    <div class="card" style="width: 30rem">
-                                        <img class="card-img-top" src="<?= $card['banner'] ?>" alt="Event Image">
-                                        <div class="card-body">
-                                            <h2 class="card-title"><?= $card['event_name'] ?></h2>
-                                            <ul class="card-text">
-                                                <li class="mb-11">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24">
-                                                        <g transform="translate(-202 -198)">
-                                                            <rect width="24" height="24" transform="translate(202 198)" fill="rgba(0,0,0,0)"></rect>
-                                                            <path d="M222,221H206a2,2,0,0,1-2-2V203a2,2,0,0,1,2-2h1v-2h2v2h10v-2h2v2h1a2,2,0,0,1,2,2v16A2,2,0,0,1,222,221Zm-16-13v11h16V208H206Zm0-5v3h16v-3H206Z"></path>
-                                                        </g>
-                                                    </svg>
-                                                    <?= ($card['date'] === null) ? date('d', strtotime($card['from_date'])) . ' - ' . date('d F Y', strtotime($card['to_date'])) : date('D, M d, Y', strtotime($card['date'])) ?>
-                                                </li>
-                                                <li class="mb-11">
-                                                    <svg width="18" height="18" viewBox="0 0 24 24">
-                                                        <g transform="translate(-644 -1260)">
-                                                            <rect width="24" height="24" transform="translate(644 1260)" fill="rgba(0,0,0,0)"></rect>
-                                                            <path d="M656,1282h0a45.794,45.794,0,0,1-3.5-4.53c-1.6-2.366-3.5-5.757-3.5-8.469a7,7,0,1,1,14,0c0,2.712-1.9,6.1-3.5,8.469A45.794,45.794,0,0,1,656,1282Zm0-18a5.006,5.006,0,0,0-5,5c0,3.124,3.5,7.95,5,9.879,1.5-1.906,5-6.683,5-9.879A5.006,5.006,0,0,0,656,1264Z"></path>
-                                                            <circle cx="2.5" cy="2.5" r="2.5" transform="translate(653.5 1266.5)"></circle>
-                                                        </g>
-                                                    </svg>
-                                                    <?= $card['venue'] ?>
-                                                </li>
-                                                <li class="mb-11">
-                                                    <svg width="18" height="18" viewBox="0 0 24 24">
-                                                        <g transform="translate(-576 -550)">
-                                                            <rect width="24" height="24" transform="translate(576 550)" fill="rgba(0,0,0,0)"></rect>
-                                                            <path d="M588,572a10,10,0,1,1,10-10A10.012,10.012,0,0,1,588,572Zm0-18a8,8,0,1,0,8,8A8.009,8.009,0,0,0,588,554Zm4.2,12.2h0L587,563v-6h1.5v5.2l4.5,2.7-.8,1.3Z"></path>
-                                                        </g>
-                                                    </svg>
-                                                    <?= date('h:i a', strtotime($card['time'])) . ' - ' . date('h:i a', strtotime($card['time'] . ' + 9 hours')) ?>
-                                                </li>
-                                                <li class="mb-11">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 576 512">
-                                                        <path d="M64 64C28.7 64 0 92.7 0 128v64c0 8.8 7.4 15.7 15.7 18.6C34.5 217.1 48 235 48 256s-13.5 38.9-32.3 45.4C7.4 304.3 0 311.2 0 320v64c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V320c0-8.8-7.4-15.7-15.7-18.6C541.5 294.9 528 277 528 256s13.5-38.9 32.3-45.4c8.3-2.9 15.7-9.8 15.7-18.6V128c0-35.3-28.7-64-64-64H64zm64 112l0 160c0 8.8 7.2 16 16 16H432c8.8 0 16-7.2 16-16V176c0-8.8-7.2-16-16-16H144c-8.8 0-16 7.2-16 16zM96 160c0-17.7 14.3-32 32-32H448c17.7 0 32 14.3 32 32V352c0 17.7-14.3 32-32 32H128c-17.7 0-32-14.3-32-32V160z" />
-                                                    </svg>
-                                                    KES. <?= number_format($card['ticket_price']) ?>
-                                                </li>
-                                            </ul>
-                                            <br><br>
-                                            <button type="button" id="buyingBtn" class="btn btn-primary">Buy Ticket &rarr;</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-
-                            <?php $rowCount++; ?>
-
-                            <?php if ($rowCount % 3 === 0 || $rowCount === count($cards_data)) : ?>
-                            </tr>
-                        <?php endif; ?>
-
-                    <?php endforeach; ?>
-                </table>
-            </div>
-        </div>
-    <?php endif; ?>
-    <div style="flex-grow:1"></div>
-    <!--Modal for Buying Tickets-->
-    <div class="modal" id="buying">
-        <div class="form-box">
-            <h2 id="event-name-buy"></h2>
-            <form id="purchaseTicketForm" method="POST" action="../assets/php/action.php">
-                <input type="hidden" name="eventId" value="<?= $card['id'] ?>">
-                <?= str_repeat('<br>', 3); ?>
-                <label for="" style="font-size: 15px;">No of tickets to buy</label>
-                <div class="quantity-selector">
-                    <svg class="decrease-quantity" width="18" height="18" viewBox="0 0 448 512">
-                        <path d="M432 256c0 17.7-14.3 32-32 32L48 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l352 0c17.7 0 32 14.3 32 32z" />
-                    </svg>
-
-                    <input readonly name="number_of_tickets" value="1" min="1" max="5" class="input-field quantity" />
-
-                    <svg class="increase-quantity" width="18" height="18">
-                        <g transform="translate(-100 -1482)">
-                            <rect width="24" height="24" transform="translate(100 1482)" fill="rgba(0,0,0,0)"></rect>
-                            <path d="M119,1495h-6v6h-2v-6h-6v-2h6v-6h2v6h6Z"></path>
-                        </g>
-                    </svg>
-                </div>
-                <div class="total-price">Total price: KES. <span id="total-price-display">0</span></div>
-
-                <input type="hidden" name="ticket_price" value="<?= $card['ticket_price'] ?>">
-                <div class="btn-field">
-                    <button type="button" class="close" id="buyingClose">Close</button>
-                    <button type="submit" class="btn" name="purchase-ticket-btn">Pay &rarr;</button>
+    <!-- =============Sidebar Close================ -->
+    <div class="content">
+        <nav>
+            <i class="bx bx-menu"></i>
+            <form action="#">
+                <div class="form-input">
+                    <input type="search" placeholder="Search................" />
+                    <button type="submit"><i class="bx bx-search"></i></button>
                 </div>
             </form>
-        </div>
-    </div>
 
-    <!--Footer-->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="footer-col">
-                    <h4>company</h4>
-                    <ul>
-                        <li><a href="../assets/index.php">About Us</a></li>
-                        <li><a href="../assets/index.php">Our Services</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>get help</h4>
-                    <ul>
-                        <li><a href="#">FAQ</a></li>
-                        <li><a href="#">Refunds</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                        <li><a href="#">Payment Options</a></li>
-                    </ul>
-                </div>
+            <div class="profile-details">
+                <img src="../assets/images/avatar.png" alt="" class="rounded-circle">
+                <span class="full_name"><?= $fullname; ?></span>
 
             </div>
-        </div>
-    </footer>
-    <script src='../assets/js/clientmodals.js'></script>
+        </nav>
+
+
+        <!-- Main Start -->
+        <main>
+            <div class="header">
+                <h1>Upcoming Events</h1>
+                <?= $message ?>
+            </div>
+
+            <div class="search_event_card">
+                <div class="search_event_items">
+                    <div class="search-wrapper">
+                        <input type="text" placeholder="Search Event by name..." />
+                        <i class="bx bx-search"></i>
+                    </div>
+
+                    <!-- Filter Dropdown -->
+                    <select class="filter-dropdown">
+                        <option value="">Filter by Category</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="conferencing">Conferencing</option>
+                        <option value="movies_theatre">Movies & Theatre</option>
+                        <option value="sports">Sports</option>
+                        <option value="free_events">Free Events</option>
+                    </select>
+
+                </div>
+            </div>
+
+
+            
+            <!--============= bottom Data Start ===============-->
+            <div class="bottom_data">
+                <div class="orders">
+                    <?php if ($events_data) : ?>
+                      
+                                <?php foreach ($events_data as $event) : ?>
+                                    <tr data-id="<?= $event['event_id'] ?>">
+                                        <td class="img-content">
+                                            <img src="../assets/images/uploads/<?= basename($event['event_photo']) ?>" alt="Event Photo" />
+                                        </td>
+                                        <td><?= $event['title'] ?></td>
+                                        <td><?= date('d M Y, H:i A', strtotime($event['start_datetime'])) ?></td>
+                                        <td><?= date('d M Y, H:i A', strtotime($event['end_datetime'])) ?></td>
+                                        <td> <?= $event['ticket_price'] ?> </td>
+                                        <td> <?= $event['ticket_quantity_available'] ?></td>
+                                        <td>
+                                            <p class="status <?= strtolower($event['event_status']); ?>">
+                                                <strong><?= ucfirst(strtolower($event['event_status'])); ?></strong>
+                                            </p>
+                                        </td>
+
+                                        <td>
+                                            <div class="actions">
+                                                <!-- <a href="#" id=""class="edit">View</a> -->
+
+                                                <a href="#" class="edit" id='openEditModalButton' data-id="<?= $event['event_id'] ?>" data-title="<?= $event['title'] ?>" data-description="<?= $event['description'] ?>" data-location="<?= $event['location_details'] ?>" data-type="<?= $event['event_type'] ?>" data-start="<?= $event['start_datetime'] ?>" data-end="<?= $event['end_datetime'] ?>" data-price="<?= $event['ticket_price'] ?>" data-capacity="<?= $event['ticket_quantity_available'] ?>" data-poster="<?= $event['event_photo'] ?>">
+                                                    Buy Ticket
+                                                </a>
+
+                                             
+                                            </div>
+
+                                    </tr>
+                                <?php endforeach; ?>
+
+
+                            </tbody>
+                        </table>
+                </div>
+
+            <?php else : ?>
+                <h3 style="margin-left: 20%;">No events at the moment!</h3>
+
+            <?php endif; ?>
+
+            </div>
+            <!--============= bottom Data End ===============-->
+
+            <!-- create event modal Start -->
+
+            <div id="buyTicketModal" class="modal">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h2>Create Event</h2>
+                        <span class="close-modal" onclick="closeModal()">&times;</span>
+                    </div>
+                    <form action="../assets/php/organizer_action.php" method="post" enctype="multipart/form-data" class="form">
+                        <?= Utils::insertCsrfToken() ?>
+                        <!-- Modal Body -->
+                        <div class="modal-body">
+                            <!-- Organizer Dropdown -->
+                            <label for="organizer">Who is organizing this event? <span class="asterisk">*</span></label>
+                            <input hidden name="organizer" value="<?= $userId ?>">
+                            <div class="dropdown-wrapper-modal">
+                                <i class="bx bx-group"></i>
+                                <select id="modal-organizer" name="organizer" disabled>
+                                    <option style="color: #363949;" selected><?= $fullname; ?></option>
+                                </select>
+                            </div>
+
+                            <br>
+
+                            <div class="form-field">
+                                <!-- Name Input -->
+                                <label for="modal-eventName">Event Name <span class="asterisk">*</span></label>
+                                <input type="text" id="modal-eventName" name="eventName" placeholder="Enter event name" required>
+                                <small></small>
+                            </div>
+
+                            <!-- Event Photo Picker -->
+                            <label for="modal-eventPhoto">Event Photo <span class="asterisk">*</span></label>
+                            <div class="file-picker-wrapper">
+                                <input type="file" id="modal-eventPhoto" name="eventPhoto" accept="image/*" required>
+
+                            </div>
+
+                            <div class="form-field">
+                                <!-- Description (Rich Text) -->
+                                <label for="modal-description">Description</label>
+                                <textarea id="modal-description" name="description"></textarea>
+                                <small></small>
+                            </div>
+
+                            <div class="form-field">
+                                <!-- Event Location -->
+                                <label for="modal-eventLocation">Event Location <span class="asterisk">*</span></label>
+                                <input type="text" name="eventLocation" placeholder="Enter event location" required>
+                                <small></small>
+                            </div>
+
+                            <div class="form-field">
+                                <!-- Event Type Dropdown -->
+                                <label for="modal-eventType">Event Type <span class="asterisk">*</span></label>
+                                <select id="modal-eventType" name="eventType" class="modal-event-type" style=" border: 1px solid #ccc; border-radius: 5px; font-size: 16px; transition: border-color 0.3s ease;" required>
+                                    <option value="">Select Event Type</option>
+                                    <option value="entertainment">Entertainment</option>
+                                    <option value="conferencing">Conferencing</option>
+                                    <option value="movies_theatre">Movies & Theatre</option>
+                                    <option value="sports">Sports</option>
+                                    <option value="free">Free Event</option>
+                                </select>
+                                <small></small>
+                            </div>
+
+                            <!-- Start and End Date -->
+                            <div class="date-row">
+                                <div class="date-field">
+                                    <label for="modal-startDate">Start Date <span class="asterisk">*</span></label>
+                                    <input type="datetime-local" id="modal-startDate" name="startDate" required>
+                                </div>
+                                <div class="date-field">
+                                    <label for="modal-endDate">End Date <span class="asterisk">*</span></label>
+                                    <input type="datetime-local" id="modal-endDate" name="endDate" required>
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="modal-ticketPrice">Ticket Price (KSh) <span class="asterisk">*</span></label>
+                                <div class="ticket-price-control">
+                                    <input type="number" id="modal-ticketPrice" name="ticket_price" value="1" min="0" required>
+                                </div>
+                                <small></small>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="modal-ticketCapacity">Ticket Capacity <span class="asterisk">*</span></label>
+                                <input type="number" id="modal-ticketCapacity" name="tickets_available" value="100" min="1" required>
+                                <small></small>
+                            </div>
+
+
+                            <!-- Create Event Button -->
+                            <button type="submit" name="create-event-btn" class="create-event-btn">Create Event</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- create event modal Close -->
+
+
+
+        </main>
+        <!-- Main Close -->
+    </div>
+    <!-- =============Content CLose================ -->
+
+
+    <script>
+        /**
+         * Toggle the modal (open/close)
+         * @param {string} modalId - The ID of the modal to toggle.
+         * @param {string} action - 'open' or 'close' to show or hide the modal.
+         */
+        function toggleModal(modalId, action) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = action === 'open' ? 'block' : 'none';
+        }
+
+        /**
+         * Close the edit modal.
+         */
+        function closeEditModal() {
+            toggleModal('editEventModal', 'close');
+        }
+
+        /**
+         * Open the edit modal and populate form fields with data.
+         * @param {Event} event - The event object triggered by the button click.
+         */
+        function openEditModal(event) {
+            event.preventDefault();
+            const button = event.currentTarget;
+
+            // Populate form fields with data from button's dataset
+            document.getElementById('edit-event-id').value = button.dataset.id;
+            document.getElementById('edit-eventName').value = button.dataset.title;
+            document.getElementById('edit-description').value = button.dataset.description;
+            document.getElementById('edit-eventLocation').value = button.dataset.location;
+            document.getElementById('edit-startDate').value = button.dataset.start;
+            document.getElementById('edit-endDate').value = button.dataset.end;
+            document.getElementById('edit-ticketPrice').value = button.dataset.price;
+            document.getElementById('edit-ticketCapacity').value = button.dataset.capacity;
+
+            // Handle event type selection
+            const eventTypeSelect = document.getElementById('edit-eventType');
+            const eventType = button.dataset.type.toLowerCase();
+            console.log('Setting event type to:', eventType);
+
+            // Find and select the matching option
+            const matchingOption = Array.from(eventTypeSelect.options).find(option =>
+                option.value.toLowerCase() === eventType ||
+                option.textContent.toLowerCase().includes(eventType)
+            );
+
+            if (matchingOption) {
+                matchingOption.selected = true;
+            } else {
+                console.warn('No matching event type found for:', eventType);
+                eventTypeSelect.selectedIndex = 0; // Select the default option
+            }
+
+            // Open the edit modal
+            toggleModal('editEventModal', 'open');
+        }
+
+
+        /**
+         * Add event listeners for modals and buttons once the DOM is loaded.
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close modal when the close button ('X') is clicked
+            document.querySelectorAll('.close-modal').forEach(closeButton => {
+                closeButton.addEventListener('click', function() {
+                    const modalId = this.closest('.modal').id;
+                    toggleModal(modalId, 'close');
+                });
+            });
+
+            // Prevent closing the modal when clicking inside its content area
+            document.querySelectorAll('.modal-content').forEach(content => {
+                content.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+            });
+
+
+            // Open create event modal
+            document.getElementById('openModalButton').addEventListener('click', function() {
+                toggleModal('buyTicketModal', 'open');
+            });
+
+
+        });
+
+
+const eventGrid = document.getElementById('eventGrid');
+eventsData.forEach(event => {
+    eventGrid.appendChild(createEventCard(event));
+});
+    </script>
+
+
+
+    <script src="../assets/js/main.js"></script>
+
 </body>
 
 </html>

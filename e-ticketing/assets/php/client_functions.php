@@ -32,11 +32,19 @@ class Client extends Db
 	 * @param string $password The password of the user
 	 * @return bool Returns true on successful registration, false otherwise
 	 */
-	public function createUserAccount($username, $email, $contact, $password)
+	public function createUserAccount($firstname, $lastname, $email, $contact, $password, $role)
 	{
-		$sql = "INSERT INTO users(username, email, contact, password)VALUES(:uname, :email, :phone, :pass)";
+		$sql = "INSERT INTO users(first_name, last_name, email, contact, password, role) 
+            VALUES(:fname, :lname, :email, :contact, :pass, :role)";
 		$stmt = $this->conn->prepare($sql);
-		$stmt->execute(['uname' => $username, 'email' => $email, 'phone' => $contact, 'pass' => $password]);
+		$stmt->execute([
+			'fname' => $firstname,
+			'lname' => $lastname,
+			'email' => $email,
+			'contact' => $contact,
+			'pass' => $password,
+			'role' => $role
+		]);
 		return true;
 	}
 
@@ -46,25 +54,25 @@ class Client extends Db
 	 * @desc Returns username and password records from db based on the method parameters
 	 */
 
-	public function loginIntoAccount($email)
-	{
-		$sql = "SELECT username, password, is_admin FROM users WHERE email = :email";
-		$stmt = $this->conn->prepare($sql);
-		$stmt->execute(['email' => $email]);
-		$result = $stmt->fetch(PDO::FETCH_ASSOC);
-		return $result;
-	}
+	 public function loginIntoAccount($email)
+	 {
+		 $sql = "SELECT id, first_name, last_name, password, role FROM users WHERE email = :email";
+		 $stmt = $this->conn->prepare($sql);
+		 $stmt->execute(['email' => $email]);
+		 $result = $stmt->fetch(PDO::FETCH_ASSOC);
+		 return $result;
+	 }
+	 
 
 	public function fetchEvents()
 	{
-		$sql = "SELECT *,
-            CASE
-                WHEN date IS NULL THEN CONCAT(from_date, ' - ', to_date)
-                ELSE date
-            END AS event_date
-            FROM events
-            WHERE (date >= CURDATE() OR from_date >= CURDATE())
-            ORDER BY date ASC";
+		$sql = "SELECT * 
+		FROM events 
+		WHERE end_datetime > NOW() 
+		AND event_status = 'ACTIVE' 
+		AND is_deleted = FALSE
+		ORDER BY start_datetime ASC;
+		";
 		$stmt = $this->conn->prepare($sql);
 		$stmt->execute();
 		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
