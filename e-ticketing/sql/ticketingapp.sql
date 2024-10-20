@@ -1,8 +1,3 @@
---
---
--- --------------------------------------------------------
--- Drop the database if it exists
--- --------------------------------------------------------
 DROP DATABASE IF EXISTS `e-ticketing`;
 -- --------------------------------------------------------
 -- Create the database
@@ -36,7 +31,8 @@ CREATE TABLE events (
   ticket_price int(11) NOT NULL,
   start_datetime DATETIME NOT NULL,
   end_datetime DATETIME NOT NULL,
-  event_status('ACTIVE', 'INACTIVE', 'DELETED') NOT NULL DEFAULT 'INACTIVE' created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  event_status('ACTIVE', 'INACTIVE', 'DELETED') NOT NULL DEFAULT 'INACTIVE',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   event_type VARCHAR(255) NOT NULL,
   event_photo VARCHAR(255) NOT NULL,
