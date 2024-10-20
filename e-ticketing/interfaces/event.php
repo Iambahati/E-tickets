@@ -157,149 +157,137 @@ unset($_SESSION['success'], $_SESSION['error']);
                         <div class="ticket-type">
                             <span class="ticket-name">Ticket</span>
                             <div class="counter">
-                                <button onclick="updateCount(-1)">-</button>
+                                <button type="button" onclick="updateCount(-1)">-</button>
                                 <input readonly type="number" id="ticketCount" value="1" min="1" name="number_of_tickets" onchange="updateTotal()">
-                                <button onclick="updateCount(1)">+</button>
+                                <button type="button" onclick="updateCount(1)">+</button>
                             </div>
                             <div id="error-message" style="display: none; color: red; margin-top: 10px;"></div>
-                            <span class="ticket-price">Ksh.<span id="ticketPrice"></span></span>
-                            <input type="hidden" name="ticket_price" id="totalPrice">
+                            <span class="ticket-price">Ksh. <span id="ticketPrice"></span></span>
+                            <input type="hidden" name="ticket_price" id="hiddenTotalPrice">
                         </div>
-                        <div class="total">Total: Ksh. <span id="totalPrice">0</span></div>
+                        <div class="total">Total: Ksh. <span id="displayTotalPrice">0</span></div>
                         <button type="submit" name="purchase-ticket-btn" id="confirmBtn">Buy</button>
                     </form>
 
                 </div>
             </div>
 
-
         </main>
         <!-- Main Close -->
     </div>
 
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Toggle for description section
             const toggleLink = document.getElementById('toggle-description');
             const descriptionText = document.getElementById('description-text');
 
-            toggleLink.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent default anchor behavior
+            toggleLink?.addEventListener('click', (e) => {
+                e.preventDefault();
                 descriptionText.classList.toggle('expanded');
-                if (descriptionText.classList.contains('expanded')) {
-                    toggleLink.textContent = 'Read Less';
-                } else {
-                    toggleLink.textContent = 'Read More';
-                }
+                toggleLink.textContent = descriptionText.classList.contains('expanded') ? 'Read Less' : 'Read More';
             });
 
+            // Ticket modal elements
+            const modal = document.getElementById("ticketModal");
+            const ticketCountInput = document.getElementById("ticketCount");
+            const eventTicketId = document.getElementById('event-ticket-id');
+            const ticketPriceElement = document.getElementById('ticketPrice');
+            const hiddenTotalPrice = document.getElementById("hiddenTotalPrice");
+            const displayTotalPrice = document.getElementById("displayTotalPrice");
+            const errorElement = document.getElementById("error-message");
+            const form = modal.querySelector("form");
 
-        });
+            let ticketPrice = 0; // Holds the price of a single ticket for calculations
 
-        const modal = document.getElementById("ticketModal");
-        let ticketPrice = 0;
-
-        function openModal(button) {
-            ticketPrice = parseFloat(button.getAttribute('data-price'));
-            document.getElementById('event-ticket-id').value = button.getAttribute('data-event-id');
-            document.getElementById('ticketPrice').textContent = formatCurrency(ticketPrice);
-            modal.style.display = "block";
-            document.getElementById('ticketCount').value = 1;
-            updateTotal();
-            hideError();
-        }
-
-        function closeModal() {
-            modal.style.display = "none";
-            document.getElementById('ticketCount').value = 1;
-            updateTotal();
-            hideError();
-        }
-
-        function updateCount(change, event) {
-            event.preventDefault(); // Prevent form submission
-            const input = document.getElementById("ticketCount");
-            let count = parseInt(input.value) + change;
-
-            if (count < 1) {
-                showError("Ticket count cannot be less than 1");
-                return;
+            // Format price as currency (with commas)
+            function formatCurrency(amount) {
+                return amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
             }
 
-            input.value = count;
-            updateTotal();
-            hideError();
-        }
+            // Update total price based on ticket count
+            function updateTotal() {
+                const total = parseInt(ticketCountInput.value) * ticketPrice;
+                hiddenTotalPrice.value = total; // Set hidden input value
+                displayTotalPrice.textContent = formatCurrency(total); // Display formatted price
+            }
 
-        function updateTotal() {
-            const ticketCount = parseInt(document.getElementById("ticketCount").value);
-            const total = ticketCount * ticketPrice;
-            document.getElementById("totalPrice").textContent = formatCurrency(total);
-        }
-
-        function formatCurrency(amount) {
-            return amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
-        }
-
-        function showError(message) {
-            const errorElement = document.getElementById("error-message");
-            if (errorElement) {
+            // Display an error message
+            function showError(message) {
                 errorElement.textContent = message;
                 errorElement.style.display = "block";
-            } else {
-                console.error(message);
             }
-        }
 
-        function hideError() {
-            const errorElement = document.getElementById("error-message");
-            if (errorElement) {
+            // Hide the error message
+            function hideError() {
                 errorElement.style.display = "none";
             }
-        }
 
-        function confirmSelection(event) {
-            event.preventDefault();
+            // Open the modal and initialize ticket data
+            window.openModal = (button) => {
+                ticketPrice = parseFloat(button.dataset.price); // Set ticket price from button's data attribute
+                eventTicketId.value = button.dataset.eventId; // Set event ID from button's data attribute
+                ticketPriceElement.textContent = formatCurrency(ticketPrice); // Display price in modal
+                modal.style.display = "block"; // Show modal
+                ticketCountInput.value = 1; // Reset ticket count to 1
+                updateTotal(); // Update total price
+                hideError(); // Hide any previous error
+            };
 
-            const ticketCount = parseInt(document.getElementById("ticketCount").value);
-            if (ticketCount < 1) {
-                showError("Please select at least 1 ticket");
-                return;
+            // Close the modal and reset values
+            window.closeModal = () => {
+                modal.style.display = "none"; // Hide modal
+                ticketCountInput.value = 1; // Reset ticket count
+                updateTotal(); // Update total price
+                hideError(); // Hide any previous error
+            };
+
+            // Update ticket count based on the +/- button clicks
+            function updateCount(change) {
+                let count = parseInt(ticketCountInput.value) + change;
+                if (count < 1) {
+                    showError("Ticket count cannot be less than 1");
+                    return;
+                }
+                ticketCountInput.value = count;
+                updateTotal(); // Recalculate total price
+                hideError(); // Hide error
             }
 
-            // Add ticket count to the form
-            const form = document.querySelector("#ticketModal form");
-            let ticketCountInput = form.querySelector('input[name="ticketCount"]');
-            if (!ticketCountInput) {
-                ticketCountInput = document.createElement("input");
-                ticketCountInput.type = "hidden";
-                ticketCountInput.name = "ticketCount";
-                form.appendChild(ticketCountInput);
+            // Confirm the ticket selection and submit the form
+            function confirmSelection(event) {
+                event.preventDefault();
+                if (parseInt(ticketCountInput.value) < 1) {
+                    showError("Please select at least 1 ticket");
+                    return;
+                }
+
+                // Ensure ticketCount is passed to the form
+                let ticketCountHiddenInput = form.querySelector('input[name="ticketCount"]');
+                if (!ticketCountHiddenInput) {
+                    ticketCountHiddenInput = document.createElement("input");
+                    ticketCountHiddenInput.type = "hidden";
+                    ticketCountHiddenInput.name = "ticketCount";
+                    form.appendChild(ticketCountHiddenInput);
+                }
+                ticketCountHiddenInput.value = ticketCountInput.value;
+                form.submit(); // Submit the form
             }
-            ticketCountInput.value = ticketCount;
 
-            // If everything is okay, submit the form
-            form.submit();
-        }
+            // Add event listeners for counter buttons and confirm button
+            modal.querySelector('.counter button:first-child').addEventListener('click', () => updateCount(-1));
+            modal.querySelector('.counter button:last-child').addEventListener('click', () => updateCount(1));
+            document.getElementById('confirmBtn').addEventListener('click', confirmSelection);
 
-        // Close the modal if clicked outside the content
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-
-        // Add event listeners after the DOM is fully loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            const decrementBtn = document.querySelector('.counter button:first-child');
-            const incrementBtn = document.querySelector('.counter button:last-child');
-            const confirmBtn = document.getElementById('confirmBtn');
-
-            decrementBtn.addEventListener('click', (e) => updateCount(-1, e));
-            incrementBtn.addEventListener('click', (e) => updateCount(1, e));
-            confirmBtn.addEventListener('click', confirmSelection);
+            // Close modal if clicking outside the modal content
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    closeModal();
+                }
+            };
         });
     </script>
+
 
     <script src="../assets/js/main.js"></script>
 
