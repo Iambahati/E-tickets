@@ -162,19 +162,17 @@ if (isset($_POST["purchase-ticket-btn"])) {
         $eventId = isset($_POST["eventId"]) && !empty($_POST["eventId"]) ? Utils::sanitizeInput($_POST["eventId"]) : Utils::redirect_with_message('../../interfaces/events.php', 'error', 'Event Id cannot be blank!');
         $userId = $_SESSION['userId'];
         $no_of_tckts = isset($_POST["number_of_tickets"]) ? Utils::sanitizeInput((int)$_POST["number_of_tickets"]) : 1;
-
         $total_price = isset($_POST["ticket_price"]) ? Utils::sanitizeInput((float)$_POST["ticket_price"]) : 0.0;
 
-
         if ($action->orders($userId, $eventId, $no_of_tckts, $total_price)) {
-            Utils::redirect_with_message('../../interfaces/events.php', 'success', 'Purchase successful. Please check email for your tickets');
+            Utils::redirect_with_message('../../interfaces/events.php', 'success', 'Purchase successful.');
         } else {
             Utils::redirect_with_message('../../interfaces/events.php', 'error', 'Purchase Failed');
             return;
         }
     } catch (Exception $e) {
-        // Handle exceptions by returning an error mailBody to user
-        Utils::redirect_with_message('../../index.php', 'error', 'Opps...Some error occurred: ' . $e->getMessage());
+        Utils::redirect_with_message('../../interfaces/events.php', 'error', 'Oops... Some error occurred: ' . $e->getMessage());
     }
-
 }
+
+
