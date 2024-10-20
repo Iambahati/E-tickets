@@ -36,9 +36,9 @@ unset($_SESSION['success'], $_SESSION['error']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organizer Panel</title>
+    <title>Events </title>
     <link rel="stylesheet" href='../assets/css/dash.css'>
-    <!-- <link rel="stylesheet" href='../assets/css/card.css'> -->
+    <link rel="stylesheet" href='../assets/css/card.css'>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
 
@@ -48,26 +48,24 @@ unset($_SESSION['success'], $_SESSION['error']);
 <body>
     <!-- =============Sidebar Start================ -->
     <div class="sidebar">
-        <a href="org-dashboard.php" class="logo">
+        <a href="events.php" class="logo">
             <img src="./img/logo-1.png" alt="" />
             <span>E-</span>Ticketing
         </a>
         <ul class="side-menu">
             <li class="active">
-                <a href="org-dashboard.php"><i class="bx bxs-dashboard"></i>Dashboard</a>
+                <a href="events.php"><i class='bx bxs-home'></i></i>Home</a>
+            </li>
+
+
+            <li>
+                <a href="history.php" class=""><i class='bx bx-history'></i>My History</a>
             </li>
 
             <li>
                 <a href="../assets/php/logout.php" class="logout"><i class="bx bx-log-out-circle"></i>Logout</a>
             </li>
-            <!-- <div class="side-menu">
-      <ul>
-        <li>
-          <a href="#"><i class="bx bx-moon"></i>Dark / Light</a>
-        </li>
-
-      </ul>
-    </div> -->
+    </div>
     </div>
     <!-- =============Sidebar Close================ -->
     <div class="content">
@@ -97,11 +95,19 @@ unset($_SESSION['success'], $_SESSION['error']);
 
             <div class="search_event_card">
                 <div class="search_event_items">
+                    <!-- Search Wrapper -->
                     <div class="search-wrapper">
                         <input type="text" placeholder="Search Event by name..." />
                         <i class="bx bx-search"></i>
                     </div>
 
+                    <!-- Date Range Filter -->
+                    <div class="date-picker-container">
+                        <input type="date" id="start-date" placeholder="Start Date" />
+                        <i class="bx bx-right-arrow-alt arrow-icon"></i>
+                        <input type="date" id="end-date" placeholder="End Date" />
+                        <i class="bx bx-x-circle cancel-icon" id="clear-dates"></i>
+                    </div>
                     <!-- Filter Dropdown -->
                     <select class="filter-dropdown">
                         <option value="">Filter by Category</option>
@@ -112,57 +118,71 @@ unset($_SESSION['success'], $_SESSION['error']);
                         <option value="free_events">Free Events</option>
                     </select>
 
+                    <!-- Sort By Dropdown -->
+                    <select class="filter-dropdown">
+                        <option value="">Sort By</option>
+                        <option value="upcoming">Upcoming</option>
+                        <option value="this_weekend">This Weekend</option>
+                        <option value="this_week">This Week</option>
+                        <option value="next_week">Next Week</option>
+                        <option value="this_month">This Month</option>
+                        <option value="next_month">Next Month</option>
+                    </select>
+
+                    <!-- Filter Button -->
+                    <button class="create-new-btn">
+                        <i class='bx bx-filter'></i>
+                        Filter
+                    </button>
                 </div>
             </div>
+            <?php if ($events_data) : ?>
 
+                <div class="event-grid">
+                    <?php foreach ($events_data as $event) : ?>
+                        <div class="event-card" data-id="<?= $event['event_id'] ?>">
+                            <img class="event-poster" src="../assets/images/uploads/<?= basename($event['event_photo']) ?>" alt="<?= htmlspecialchars($event['title']) ?> Poster">
+                            <div class="date-container">
+                                <span class="event-day"><?= date('D', strtotime($event['start_datetime'])) ?></span>
+                                <span class="event-date"><?= date('d', strtotime($event['start_datetime'])) ?></span>
+                                <span class="event-month"><?= date('M', strtotime($event['start_datetime'])) ?></span>
+                            </div>
+                            <div class="details">
+                                <h3><?= htmlspecialchars($event['title']) ?></h3>
+                                <div class="icon-text">
+                                    <i class='bx bx-calendar'></i>
+                                    <div>
+                                        <span><?= date('D, M d, Y', strtotime($event['start_datetime'])) ?> - <?= date('D, M d, Y', strtotime($event['end_datetime'])) ?></span>
+                                        <br>
+                                        <span><?= date('h:i A', strtotime($event['start_datetime'])) ?> - <?= date('h:i A', strtotime($event['end_datetime'])) ?></span>
+                                    </div>
+                                </div>
 
-            
-            <!--============= bottom Data Start ===============-->
-            <div class="bottom_data">
-                <div class="orders">
-                    <?php if ($events_data) : ?>
-                      
-                                <?php foreach ($events_data as $event) : ?>
-                                    <tr data-id="<?= $event['event_id'] ?>">
-                                        <td class="img-content">
-                                            <img src="../assets/images/uploads/<?= basename($event['event_photo']) ?>" alt="Event Photo" />
-                                        </td>
-                                        <td><?= $event['title'] ?></td>
-                                        <td><?= date('d M Y, H:i A', strtotime($event['start_datetime'])) ?></td>
-                                        <td><?= date('d M Y, H:i A', strtotime($event['end_datetime'])) ?></td>
-                                        <td> <?= $event['ticket_price'] ?> </td>
-                                        <td> <?= $event['ticket_quantity_available'] ?></td>
-                                        <td>
-                                            <p class="status <?= strtolower($event['event_status']); ?>">
-                                                <strong><?= ucfirst(strtolower($event['event_status'])); ?></strong>
-                                            </p>
-                                        </td>
+                                <div class="icon-text">
+                                    <i class='bx bx-map'></i>
+                                    <span><?= htmlspecialchars($event['location_details']) ?></span>
+                                </div>
 
-                                        <td>
-                                            <div class="actions">
-                                                <!-- <a href="#" id=""class="edit">View</a> -->
-
-                                                <a href="#" class="edit" id='openEditModalButton' data-id="<?= $event['event_id'] ?>" data-title="<?= $event['title'] ?>" data-description="<?= $event['description'] ?>" data-location="<?= $event['location_details'] ?>" data-type="<?= $event['event_type'] ?>" data-start="<?= $event['start_datetime'] ?>" data-end="<?= $event['end_datetime'] ?>" data-price="<?= $event['ticket_price'] ?>" data-capacity="<?= $event['ticket_quantity_available'] ?>" data-poster="<?= $event['event_photo'] ?>">
-                                                    Buy Ticket
-                                                </a>
-
-                                             
-                                            </div>
-
-                                    </tr>
-                                <?php endforeach; ?>
-
-
-                            </tbody>
-                        </table>
+                                <a href="event.php?event_id=<?= $event['event_id'] ?>&?event_name=<?= $event['title'] ?>" class="view-event" target="_blank"></a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
+
 
             <?php else : ?>
                 <h3 style="margin-left: 20%;">No events at the moment!</h3>
 
             <?php endif; ?>
 
-            </div>
+
+
+
+            <!--============= bottom Data Start ===============-->
+
+
+
+
             <!--============= bottom Data End ===============-->
 
             <!-- create event modal Start -->
@@ -272,101 +292,43 @@ unset($_SESSION['success'], $_SESSION['error']);
         </main>
         <!-- Main Close -->
     </div>
-    <!-- =============Content CLose================ -->
 
 
     <script>
         /**
-         * Toggle the modal (open/close)
-         * @param {string} modalId - The ID of the modal to toggle.
-         * @param {string} action - 'open' or 'close' to show or hide the modal.
+         * Date Picker Functionality
+         * This function initializes event listeners for the start and end date input fields,
+         * shows the clear icon when both fields have values, and clears the fields when the
+         * clear icon is clicked.
          */
-        function toggleModal(modalId, action) {
-            const modal = document.getElementById(modalId);
-            modal.style.display = action === 'open' ? 'block' : 'none';
-        }
+        function initializeDatePicker() {
+            const startDateInput = document.getElementById('start-date');
+            const endDateInput = document.getElementById('end-date');
+            const clearDatesIcon = document.getElementById('clear-dates');
 
-        /**
-         * Close the edit modal.
-         */
-        function closeEditModal() {
-            toggleModal('editEventModal', 'close');
-        }
-
-        /**
-         * Open the edit modal and populate form fields with data.
-         * @param {Event} event - The event object triggered by the button click.
-         */
-        function openEditModal(event) {
-            event.preventDefault();
-            const button = event.currentTarget;
-
-            // Populate form fields with data from button's dataset
-            document.getElementById('edit-event-id').value = button.dataset.id;
-            document.getElementById('edit-eventName').value = button.dataset.title;
-            document.getElementById('edit-description').value = button.dataset.description;
-            document.getElementById('edit-eventLocation').value = button.dataset.location;
-            document.getElementById('edit-startDate').value = button.dataset.start;
-            document.getElementById('edit-endDate').value = button.dataset.end;
-            document.getElementById('edit-ticketPrice').value = button.dataset.price;
-            document.getElementById('edit-ticketCapacity').value = button.dataset.capacity;
-
-            // Handle event type selection
-            const eventTypeSelect = document.getElementById('edit-eventType');
-            const eventType = button.dataset.type.toLowerCase();
-            console.log('Setting event type to:', eventType);
-
-            // Find and select the matching option
-            const matchingOption = Array.from(eventTypeSelect.options).find(option =>
-                option.value.toLowerCase() === eventType ||
-                option.textContent.toLowerCase().includes(eventType)
-            );
-
-            if (matchingOption) {
-                matchingOption.selected = true;
-            } else {
-                console.warn('No matching event type found for:', eventType);
-                eventTypeSelect.selectedIndex = 0; // Select the default option
+            // Show clear icon when both fields are filled
+            function checkForFilledFields() {
+                if (startDateInput.value && endDateInput.value) {
+                    clearDatesIcon.style.display = 'block';
+                } else {
+                    clearDatesIcon.style.display = 'none';
+                }
             }
 
-            // Open the edit modal
-            toggleModal('editEventModal', 'open');
+            // Add event listeners for both date fields
+            startDateInput.addEventListener('change', checkForFilledFields);
+            endDateInput.addEventListener('change', checkForFilledFields);
+
+            // Clear the date fields when the cancel icon is clicked
+            clearDatesIcon.addEventListener('click', () => {
+                startDateInput.value = '';
+                endDateInput.value = '';
+                clearDatesIcon.style.display = 'none'; // Hide the cancel icon
+            });
         }
 
-
-        /**
-         * Add event listeners for modals and buttons once the DOM is loaded.
-         */
-        document.addEventListener('DOMContentLoaded', function() {
-            // Close modal when the close button ('X') is clicked
-            document.querySelectorAll('.close-modal').forEach(closeButton => {
-                closeButton.addEventListener('click', function() {
-                    const modalId = this.closest('.modal').id;
-                    toggleModal(modalId, 'close');
-                });
-            });
-
-            // Prevent closing the modal when clicking inside its content area
-            document.querySelectorAll('.modal-content').forEach(content => {
-                content.addEventListener('click', function(event) {
-                    event.stopPropagation();
-                });
-            });
-
-
-            // Open create event modal
-            document.getElementById('openModalButton').addEventListener('click', function() {
-                toggleModal('buyTicketModal', 'open');
-            });
-
-
-        });
-
-
-const eventGrid = document.getElementById('eventGrid');
-eventsData.forEach(event => {
-    eventGrid.appendChild(createEventCard(event));
-});
+        // Initialize the date picker functionality when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', initializeDatePicker);
     </script>
 
 

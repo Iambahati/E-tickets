@@ -6,8 +6,6 @@ require_once 'client_functions.php';
 // Create a Client instance
 $action = new Client();
 
-$reservations = new Reservations();
-
 //Handle [register] request of buyer user
 if (isset($_POST["client-signup-btn"])) {
     try {
@@ -162,31 +160,13 @@ if (isset($_POST["client-signin-btn"])) {
 if (isset($_POST["purchase-ticket-btn"])) {
     try {
         $eventId = isset($_POST["eventId"]) && !empty($_POST["eventId"]) ? Utils::sanitizeInput($_POST["eventId"]) : Utils::redirect_with_message('../../interfaces/events.php', 'error', 'Event Id cannot be blank!');
-        $userEmail = $_SESSION['clientEmail'];
-        $userId = $action->fetchUserIdByEmail($userEmail);
-        $no_of_tckts = isset($_POST["number_of_tickets"]) ? Utils::sanitizeInput((int)$_POST["number_of_tickets"]) : 0;
+        $userId = $_SESSION['userId'];
+        $no_of_tckts = isset($_POST["number_of_tickets"]) ? Utils::sanitizeInput((int)$_POST["number_of_tickets"]) : 1;
 
-        $price = isset($_POST["ticket_price"]) ? Utils::sanitizeInput((float)$_POST["ticket_price"]) : 0.0;
-        $total_price = $no_of_tckts * $price;
+        $total_price = isset($_POST["ticket_price"]) ? Utils::sanitizeInput((float)$_POST["ticket_price"]) : 0.0;
 
-        $eventName = $action->fetchEventNameById($eventId);
 
-        // Fetch the event date information based on the event ID
-        $eventDateResult = $action->fetchEventDateById($eventId);
-
-        // Extract individual date components from the result
-        $eventDate = $eventDateResult['date']; // Single event date
-        $fromDate = $eventDateResult['from_date']; // Start date of the date range
-        $toDate = $eventDateResult['to_date']; // End date of the date range
-
-        // Generate the validity dates based on event date or date range
-        $validityDates = ($eventDate !== null)
-            ? date('D, M d, Y', strtotime($eventDate)) // If event date exists, format it as a single date
-            : (($fromDate !== null && $toDate !== null)
-                ? (date('D, M d, Y', strtotime($fromDate)) . ' - ' . date('D, M d, Y', strtotime($toDate))) // If from_date and to_date exist, format them as a date range
-                : 'N/A'); // If both dates are null, set validityDates as 'N/A'
-
-        if ($reservations->confirmReservationAndSendTickets($no_of_tckts, $total_price, $userEmail, $userId, $eventId, $eventName, $validityDates)) {
+        if ($action->orders($userId, $eventId, $no_of_tckts, $total_price)) {
             Utils::redirect_with_message('../../interfaces/events.php', 'success', 'Purchase successful. Please check email for your tickets');
         } else {
             Utils::redirect_with_message('../../interfaces/events.php', 'error', 'Purchase Failed');
@@ -196,4 +176,5 @@ if (isset($_POST["purchase-ticket-btn"])) {
         // Handle exceptions by returning an error mailBody to user
         Utils::redirect_with_message('../../index.php', 'error', 'Opps...Some error occurred: ' . $e->getMessage());
     }
+
 }

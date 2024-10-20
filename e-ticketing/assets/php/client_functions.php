@@ -54,15 +54,15 @@ class Client extends Db
 	 * @desc Returns username and password records from db based on the method parameters
 	 */
 
-	 public function loginIntoAccount($email)
-	 {
-		 $sql = "SELECT id, first_name, last_name, password, role FROM users WHERE email = :email";
-		 $stmt = $this->conn->prepare($sql);
-		 $stmt->execute(['email' => $email]);
-		 $result = $stmt->fetch(PDO::FETCH_ASSOC);
-		 return $result;
-	 }
-	 
+	public function loginIntoAccount($email)
+	{
+		$sql = "SELECT id, first_name, last_name, password, role FROM users WHERE email = :email";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute(['email' => $email]);
+		$result = $stmt->fetch(PDO::FETCH_ASSOC);
+		return $result;
+	}
+
 
 	public function fetchEvents()
 	{
@@ -89,50 +89,55 @@ class Client extends Db
 		return $result['id'];
 	}
 
-	public function fetchEventNameById(string $id)
+	public function fetchEventById(string $id)
 	{
-		$sql = "SELECT event_name FROM events WHERE id = :id";
+		$sql = "SELECT * FROM events WHERE event_id = :id";
 		$stmt = $this->conn->prepare($sql);
 		$stmt->execute(['id' => $id]);
 		$result = $stmt->fetch(PDO::FETCH_ASSOC);
-		return $result['event_name'];
-	}
-
-
-	public function fetchEventDateById(string $id)
-	{
-		$sql = "SELECT date, from_date, to_date FROM events WHERE id = :id";
-		$stmt = $this->conn->prepare($sql);
-		$stmt->execute(['id' => $id]);
-		$result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-		if ($result) {
-			if ($result['date'] === null) {
-				// If the 'date' column is null, return the 'from_date' and 'to_date' columns
-				$result['eventDate'] = $result['from_date'] . ' - ' . $result['to_date'];
-			} else {
-				// If the 'date' column has a value, return it as the event date
-				$result['eventDate'] = $result['date'];
-			}
-
-			$currentDate = date('Y-m-d'); // Get the current date
-			$result['hasPassed'] = $result['eventDate'] < $currentDate;
-
-			// Convert the event date to the desired format (e.g., Thu, Jan 01, 2022)
-			$result['eventDate'] = date('D, M d, Y', strtotime($result['eventDate']));
-		}
-
 		return $result;
 	}
 
 
-	public function createReservation($userId, $eventId, $no_tckts, $total)
+	public function orders($userId, $eventId, $no_tickets, $total)
 	{
-		$sql = "INSERT INTO reservations(number_of_tickets, total_amount, users_id, events_id)VALUES(:no_tckts, :t_amount, :userId, :eventId)";
-		$stmt = $this->conn->prepare($sql);
-		$stmt->execute(['no_tckts' => $no_tckts, 't_amount' => $total, 'userId' => $userId['id'], 'eventId' => $eventId]);
-		return true;
+		try {
+			// Start a transaction
+			$this->conn->beginTransaction();
+
+			// Update the event's ticket quantity
+			$updateSql = "UPDATE events
+                      SET ticket_quantity_available = ticket_quantity_available - :no_tickets
+                      WHERE event_id = :eventId AND ticket_quantity_available >= :no_tickets";
+
+			// Prepare and execute the update statement
+			$updateStmt = $this->conn->prepare($updateSql);
+			$updateStmt->execute(['no_tickets' => $no_tickets, 'eventId' => $eventId]);
+
+			// Check if any rows were affected (i.e., tickets were successfully reduced)
+			if ($updateStmt->rowCount() > 0) {
+				// SQL to insert into the tickets table, including the quantity
+				$insertSql = "INSERT INTO tickets (event_id, customer_id, ticket_status, quantity)
+                           VALUES (:eventId, :userId, 'Purchased', :no_tickets)";
+				$insertStmt = $this->conn->prepare($insertSql);
+				$insertStmt->execute(['eventId' => $eventId, 'userId' => $userId['id'], 'no_tickets' => $no_tickets]);
+
+				// Commit the transaction
+				$this->conn->commit();
+				return true;
+			} else {
+				// If no rows were affected, rollback the transaction
+				$this->conn->rollBack();
+				return false; // Indicate that the operation failed due to insufficient tickets
+			}
+		} catch (PDOException $e) {
+			// In case of an error, rollback the transaction
+			$this->conn->rollBack();
+			throw new Exception("Database error: " . $e->getMessage());
+		}
 	}
+
+
 
 	/**
 	 * @param string $tablename
@@ -148,137 +153,27 @@ class Client extends Db
 		return $count;
 	}
 
-	/**
-	 * Loads data from the "reservations" table.
-	 *
-	 * @return array An array containing the retrieved data.
-	 */
-	public function reservationsPerPage($current_page)
-	{
-		$offset = ($current_page - 1) * 5;
-
-		$sql = "SELECT r.*, e.date
-            FROM reservations AS r
-            JOIN events AS e ON r.events_id = e.id
-            ORDER BY e.date ASC
-            LIMIT :offset, :records_per_page";
-
+	public function getAttendedEventsHistory($userId) {
+		$sql = "SELECT 
+					e.event_id, 
+					e.title, 
+					e.start_datetime, 
+					e.end_datetime, 
+					t.purchase_date, 
+					t.ticket_status 
+				FROM 
+					tickets t 
+				JOIN 
+					events e ON t.event_id = e.event_id 
+				WHERE 
+					t.customer_id = :userId 
+				ORDER BY 
+					t.purchase_date DESC";
+		
 		$stmt = $this->conn->prepare($sql);
-		$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-		$stmt->bindValue(':records_per_page', 5, PDO::PARAM_INT);
-		$stmt->execute();
-		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		return $result;
+		$stmt->execute(['userId' => $userId]);
+		
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
-
-	public function getEventNameFromId($id)
-	{
-		$sql = "SELECT event_name FROM events WHERE id = :id";
-		$stmt = $this->conn->prepare($sql);
-		$stmt->execute(['id' => $id]);
-		$result = $stmt->fetch(PDO::FETCH_ASSOC);
-		return $result['event_name'];
-	}
-}
-
-
-class Reservations extends Db
-{
-
-	public function makeReservation($numberOfTickets, $totalAmount, $userEmail, $userId, $eventId)
-	{
-		// Insert reservation details into the 'reservations' table
-		$sql = "INSERT INTO `reservations` (`number_of_tickets`, `total_amount`, `users_email`, `events_id`) VALUES (?, ?, ?, ?)";
-		$stmt = $this->conn->prepare($sql);
-		$stmt->execute([$numberOfTickets, $totalAmount, $userEmail, $eventId]);
-
-		// Get the last inserted ID, which is the reservation ID
-		$reservationId = $this->conn->lastInsertId();
-
-		// Decrement the tickets_capacity column in the events table
-		$updateSql = "UPDATE `events` SET `tickets_capacity` = `tickets_capacity` - ? WHERE `id` = ?";
-		$updateStmt = $this->conn->prepare($updateSql);
-		$updateStmt->execute([$numberOfTickets, $eventId]);
-
-		// Create a unique transaction for each reservation
-		$this->createTransaction($userId);
-
-		// Generate unique tickets for the reservation
-		return $this->generateTickets($reservationId, $numberOfTickets);
-	}
-
-
-	protected function createTransaction($userId)
-	{
-		// Generate a unique transaction code
-		$transactionCode = $this->generateToken();
-
-		// Insert the user ID and transaction code into the 'transactions' table
-		$sql = "INSERT INTO `transactions` (`users_id`, `transaction_code`) VALUES (?, ?)";
-		$stmt = $this->conn->prepare($sql);
-		$stmt->execute([$userId, $transactionCode]);
-
-		return $transactionCode;
-	}
-
-	protected function generateTickets($reservationId, $numberOfTickets)
-	{
-		// Save tcks into an array since tickets could one or more
-		$tickets = [];
-		for ($i = 0; $i < $numberOfTickets; $i++) {
-			// Generate a unique token for each ticket
-			$token = $this->generateToken();
-
-			// Insert the reservation ID and token into the 'tickets' table
-			$sql = "INSERT INTO `tickets` (`reservation_id`, `token`) VALUES (?, ?)";
-			$stmt = $this->conn->prepare($sql);
-			$stmt->execute([$reservationId, $token]);
-
-			// Add the token to the tickets array
-			$tickets[] = $token;
-		}
-
-		return $tickets;
-	}
-
-	// Generate a unique token
-	protected function generateToken()
-	{
-		return bin2hex(random_bytes(16));
-	}
-
-	public function getEventVenueFromId($id)
-	{
-		$sql = "SELECT venue FROM events WHERE id = :id";
-		$stmt = $this->conn->prepare($sql);
-		$stmt->execute(['id' => $id]);
-		$result = $stmt->fetch(PDO::FETCH_ASSOC);
-		return $result['venue'];
-	}
-
-	public function getEventTimeFromId($id)
-	{
-		$sql = "SELECT time FROM events WHERE id = :id";
-		$stmt = $this->conn->prepare($sql);
-		$stmt->execute(['id' => $id]);
-		$result = $stmt->fetch(PDO::FETCH_ASSOC);
-		return $result['id'];
-	}
-
-	public function confirmReservationAndSendTickets($numberOfTickets, $totalAmount, $userEmail, $userId, $eventId, $eventName, $validityDates)
-	{
-		// Make reservations and get the tickets
-		$tickets = $this->makeReservation($numberOfTickets, $totalAmount, $userEmail, $userId, $eventId);
-
-		$eventLocation = $this->getEventVenueFromId($eventId);
-		$eventTime = $this->getEventTimeFromId($eventId);
-		// Invoke Mailer class to statically access
-		// sendTicketsByEmail function now which  send the tickets
-		if (Mailer::sendTicketsByEmail($userEmail, $tickets, $eventName, $validityDates, $eventLocation, $eventTime)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
+	
 }

@@ -16,16 +16,10 @@ class ComposerStaticInit6e5343fb2e06023d90d2d71290a42bbe
         array (
             'setasign\\Fpdi\\' => 14,
         ),
-        'c' => 
-        array (
-            'chillerlan\\Settings\\' => 20,
-            'chillerlan\\QRCode\\' => 18,
-        ),
         'P' => 
         array (
             'Psr\\Log\\' => 8,
             'Psr\\Http\\Message\\' => 17,
-            'PHPMailer\\PHPMailer\\' => 20,
         ),
         'M' => 
         array (
@@ -44,14 +38,6 @@ class ComposerStaticInit6e5343fb2e06023d90d2d71290a42bbe
         array (
             0 => __DIR__ . '/..' . '/setasign/fpdi/src',
         ),
-        'chillerlan\\Settings\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/chillerlan/php-settings-container/src',
-        ),
-        'chillerlan\\QRCode\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/chillerlan/php-qrcode/src',
-        ),
         'Psr\\Log\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/log/src',
@@ -59,10 +45,6 @@ class ComposerStaticInit6e5343fb2e06023d90d2d71290a42bbe
         'Psr\\Http\\Message\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-message/src',
-        ),
-        'PHPMailer\\PHPMailer\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
         ),
         'Mpdf\\PsrLogAwareTrait\\' => 
         array (
