@@ -64,9 +64,12 @@ if (isset($_POST["organizer-signin-btn"])) {
         $result = $action->loginIntoMerchantAccount($email);
 
         if (!empty($result)) {
+            if( $result['role'] !== '2'){
+                Utils::redirect_with_message('../../buyer_signin.php', 'error', 'User not found.');
+            }
             // If passwords match, login the user and redirect to the appropriate dashboard
             if (password_verify($pass, $result['password'])) {
-                $_SESSION['clientName'] = (is_null($result['first_name']) && is_null($result['last_name'])) ? $result['organization_name'] : $result['first_name'] . ' ' . $result['last_name'];
+                $_SESSION['clientName'] = $result['organization_name'];
 
                 $_SESSION['userId'] = $result['id'];
                 $_SESSION['accRole'] = $result['role'];

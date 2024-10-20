@@ -67,6 +67,9 @@ if (isset($_POST["client-signin-btn"])) {
         $result = $action->loginIntoAccount($email);
 
         if (!empty($result)) {
+            if( $result['role'] !== '3'){
+                Utils::redirect_with_message('../../buyer_signin.php', 'error', 'User not found.');
+            }
             // If passwords match, login the user and redirect to the appropriate dashboard
             if (password_verify($pass, $result['password'])) {
                 $_SESSION['clientName'] = $result['first_name'] . ' ' . $result['last_name'];
