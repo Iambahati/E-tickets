@@ -3,6 +3,7 @@ require_once '../../utils.php';
 require_once '../../mailer.php';
 require_once 'client_functions.php';
 
+
 // Create a Client instance
 $action = new Client();
 
@@ -65,7 +66,7 @@ if (isset($_POST["client-signin-btn"])) {
         $result = $action->loginIntoAccount($email);
 
         if (!empty($result)) {
-            if( $result['role'] !== '3'){
+            if ($result['role'] !== '3') {
                 Utils::redirect_with_message('../../buyer_signin.php', 'error', 'User not found.');
             }
             // If passwords match, login the user and redirect to the appropriate dashboard
@@ -157,22 +158,39 @@ if (isset($_POST["client-signin-btn"])) {
     }
 }
 
-if (isset($_POST["purchase-ticket-btn"])) {
-    try {
-        $eventId = isset($_POST["eventId"]) && !empty($_POST["eventId"]) ? Utils::sanitizeInput($_POST["eventId"]) : Utils::redirect_with_message('../../interfaces/events.php', 'error', 'Event Id cannot be blank!');
-        $userId = $_SESSION['userId'];
-        $no_of_tckts = isset($_POST["number_of_tickets"]) ? Utils::sanitizeInput((int)$_POST["number_of_tickets"]) : 1;
-        $total_price = isset($_POST["ticket_price"]) ? Utils::sanitizeInput((float)$_POST["ticket_price"]) : 0.0;
 
-        if ($action->orders($userId, $eventId, $no_of_tckts, $total_price)) {
+if (isset($_POST["eventId"]) && isset($_POST["userId"]) && isset($_POST["number_of_tickets"])) {
+    try {
+        if (!Utils::verifyCsrfToken()) {
+            Utils::redirect_with_message('../../interfaces/events.php', 'error', 'Request could not be validated.');
+            exit;
+        }
+
+        $userId = Utils::sanitizeInput($_POST["userId"]);
+        $eventId = Utils::sanitizeInput($_POST["eventId"]);
+        $no_of_tickets = Utils::sanitizeInput((int)$_POST["number_of_tickets"]);
+
+        // Validate that all required fields have values
+        if (empty($userId) || empty($eventId) || $no_of_tickets < 1) {
+            $missingFields = [];
+            if (empty($userId)) $missingFields[] = 'userId';
+            if (empty($eventId)) $missingFields[] = 'eventId';
+            if ($no_of_tickets < 1) $missingFields[] = 'number_of_tickets';
+            
+            Utils::redirect_with_message('../../interfaces/event.php', 'error', 'The following fields are invalid: ' . implode(', ', $missingFields));
+            exit;
+        }
+
+        // Process the order
+        if ($action->orders($userId, $eventId, $no_of_tickets)) {
             Utils::redirect_with_message('../../interfaces/events.php', 'success', 'Purchase successful.');
         } else {
-            Utils::redirect_with_message('../../interfaces/events.php', 'error', 'Purchase Failed');
-            return;
+            Utils::redirect_with_message('../../interfaces/events.php', 'error', 'Purchase failed.');
         }
     } catch (Exception $e) {
-        Utils::redirect_with_message('../../interfaces/events.php', 'error', 'Oops... Some error occurred: ' . $e->getMessage());
+        Utils::redirect_with_message('../../interfaces/event.php', 'error', 'An error occurred: ' . $e->getMessage());
     }
+} else {
+    $eventId = isset($_POST["eventId"]) ? Utils::sanitizeInput($_POST["eventId"]) : '';
+    Utils::redirect_with_message('../../interfaces/event.php?event_id='.$eventId, 'error', 'An error occurred: Missing required form data');
 }
-
-

@@ -98,44 +98,68 @@ class Client extends Db
 		return $result;
 	}
 
-
-	public function orders($userId, $eventId, $no_tickets, $total)
-	{
+	public function orders($userId, $eventId, $no_tickets) {
 		try {
-			// Start a transaction
 			$this->conn->beginTransaction();
 
-			// Update the event's ticket quantity
-			$updateSql = "UPDATE events
-                      SET ticket_quantity_available = ticket_quantity_available - :no_tickets
-                      WHERE event_id = :eventId AND ticket_quantity_available >= :no_tickets";
+			// Check if enough tickets are available
+			$checkSql = "SELECT ticket_quantity_available FROM events WHERE event_id = :eventId";
+			$checkStmt = $this->conn->prepare($checkSql);
+			$checkStmt->execute(['eventId' => $eventId]);
+			$availableTickets = $checkStmt->fetchColumn();
 
-			// Prepare and execute the update statement
+			if ($availableTickets < $no_tickets) {
+				throw new Exception("Not enough tickets available");
+			}
+
+			// Update ticket quantity
+			$updateSql = "UPDATE events
+						  SET ticket_quantity_available = ticket_quantity_available - :no_tickets
+						  WHERE event_id = :eventId";
 			$updateStmt = $this->conn->prepare($updateSql);
 			$updateStmt->execute(['no_tickets' => $no_tickets, 'eventId' => $eventId]);
 
-			// Check if any rows were affected (i.e., tickets were successfully reduced)
-			if ($updateStmt->rowCount() > 0) {
-				// SQL to insert into the tickets table, including the quantity
-				$insertSql = "INSERT INTO tickets (event_id, customer_id, ticket_status, quantity)
-                           VALUES (:eventId, :userId, 'Purchased', :no_tickets)";
-				$insertStmt = $this->conn->prepare($insertSql);
-				$insertStmt->execute(['eventId' => $eventId, 'userId' => $userId['id'], 'no_tickets' => $no_tickets]);
+			// Insert into tickets table
+			$insertSql = "INSERT INTO tickets (event_id, customer_id, ticket_status, quantity)
+						  VALUES (:eventId, :userId, 'Purchased', :no_tickets)";
+			$insertStmt = $this->conn->prepare($insertSql);
+			$insertStmt->execute(['eventId' => $eventId, 'userId' => $userId, 'no_tickets' => $no_tickets]);
 
-				// Commit the transaction
-				$this->conn->commit();
-				return true;
-			} else {
-				// If no rows were affected, rollback the transaction
-				$this->conn->rollBack();
-				return false; // Indicate that the operation failed due to insufficient tickets
-			}
-		} catch (PDOException $e) {
-			// In case of an error, rollback the transaction
+			$this->conn->commit();
+			return true;
+		} catch (Exception $e) {
 			$this->conn->rollBack();
-			throw new Exception("Database error: " . $e->getMessage());
+			error_log("Error in ticket purchase: " . $e->getMessage());
+			throw $e;
 		}
 	}
+
+	// public function orders($userId, $eventId, $no_tickets)
+	// {
+	// 	try {
+			
+			
+	// 		// // SQL to insert into the tickets table, including the quantity
+	// 		$insertSql = "INSERT INTO tickets (event_id, customer_id, ticket_status, quantity)
+    //                       VALUES (:eventId, :userId, 'Purchased', :no_tickets)";
+	// 		$insertStmt = $this->conn->prepare($insertSql);
+	// 		$result = $insertStmt->execute([
+	// 			'eventId' => $eventId,
+	// 			'userId' => $userId,
+	// 			'no_tickets' => $no_tickets
+	// 		]);
+
+	// 		if ($result) {
+	// 			return true;
+	// 		} else {
+	// 			error_log("Failed to insert ticket. EventId: $eventId, UserId: $userId, No. of tickets: $no_tickets");
+	// 			return false;
+	// 		}
+	// 	} catch (PDOException $e) {
+	// 		error_log("Database error in orders method: " . $e->getMessage());
+	// 		throw new Exception("Database error: " . $e->getMessage());
+	// 	}
+	// }
 
 
 
@@ -153,7 +177,8 @@ class Client extends Db
 		return $count;
 	}
 
-	public function getAttendedEventsHistory($userId) {
+	public function getAttendedEventsHistory($userId)
+	{
 		$sql = "SELECT 
 					e.event_id, 
 					e.title, 
@@ -169,11 +194,10 @@ class Client extends Db
 					t.customer_id = :userId 
 				ORDER BY 
 					t.purchase_date DESC";
-		
+
 		$stmt = $this->conn->prepare($sql);
 		$stmt->execute(['userId' => $userId]);
-		
+
 		return $stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
-	
 }
