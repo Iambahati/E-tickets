@@ -140,6 +140,7 @@ class Organizer extends Db
 		return $result;
 	}
 
+
 	/**
 	 * Edit an existing event in the events table.
 	 *
@@ -173,28 +174,13 @@ class Organizer extends Db
 		$sql = "SELECT COUNT(*) FROM events WHERE event_id = :event_id";
 		$stmt = $this->conn->prepare($sql);
 		$stmt->execute(['event_id' => $id]);
-		
+
 		// No reservations exist, perform the deletion
 		$sql = "UPDATE events SET is_deleted = TRUE WHERE event_id = :id";
 		$stmt = $this->conn->prepare($sql);
 		$stmt->execute(['id' => $id]);
 
 		return true;
-	}
-
-
-
-	public function generateUserReservationReport($eventID)
-	{
-		// Fetch the data from the database for the specific event
-		$sql = "SELECT r.id AS reservation_id, r.users_email, r.events_id, e.event_name, r.number_of_tickets, r.total_amount
-            FROM reservations r
-            INNER JOIN events e ON r.events_id = e.id
-            WHERE r.events_id = :eventID";
-		$stmt = $this->conn->prepare($sql);
-		$stmt->execute(['eventID' => $eventID]);
-		$reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		return $reservations;
 	}
 
 	public function fetchEventNameById(string $id)
@@ -204,5 +190,59 @@ class Organizer extends Db
 		$stmt->execute(['id' => $id]);
 		$result = $stmt->fetch(PDO::FETCH_ASSOC);
 		return $result['event_name'];
+	}
+
+	/**
+	 * Retrieves a list of attendees and their ticket count for a specific event
+	 *
+	 * This method performs a JOIN query between users and tickets tables to get
+	 * attendee information along with the number of tickets they purchased for 
+	 * the specified event.
+	 *
+	 * @param int $eventId The ID of the event to get attendees for
+	 * @return array Returns an associative array containing:
+	 *               - first_name (string) First name of attendee
+	 *               - last_name (string) Last name of attendee
+	 * 			 	 - email (string) Email address of attendee
+	 *               - tickets_bought (int) Number of tickets purchased by attendee
+	 */
+	public function getEventAttendees($eventId)
+	{
+		$sql = "SELECT u.first_name, u.last_name, u.email, COUNT(t.ticket_id) AS tickets_bought
+            FROM users u
+            JOIN tickets t ON u.id = t.customer_id
+            WHERE t.event_id = :eventId
+            GROUP BY u.id";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute(['eventId' => $eventId]);
+		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		return $result;
+	}
+
+	/**
+	 * Retrieves sales information for a specific event
+	 * 
+	 * This method fetches detailed sales data including customer information,
+	 * ticket quantities, amounts and order dates for a given event ID
+	 *
+	 * @param int $eventId The ID of the event to get sales information for
+	 * @return array An array of associative arrays containing:
+	 *               - first_name: Customer's first name
+	 *               - last_name: Customer's last name 
+	 *               - email: Customer's email address
+	 *               - total_tickets: Number of tickets purchased
+	 *               - total_amount: Total purchase amount
+	 *               - order_date: Date of the order
+	 */
+	public function getEventSales($eventId)
+	{
+		$sql = "SELECT u.first_name, u.last_name, u.email, o.total_tickets, o.total_amount, o.order_date
+            FROM users u
+            JOIN orders o ON u.id = o.user_id
+            WHERE o.event_id = :eventId";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute(['eventId' => $eventId]);
+		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		return $result;
 	}
 }

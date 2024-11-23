@@ -96,3 +96,15 @@ CREATE TABLE IF NOT EXISTS `logs` (
   `ip_address` VARCHAR(15) DEFAULT NULL,
   `time_created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP()
 );
+
+CREATE TABLE orders (
+  order_id INT AUTO_INCREMENT PRIMARY KEY,
+  order_hash VARCHAR(255) NOT NULL UNIQUE,
+  user_id INT NOT NULL,
+  event_id INT NOT NULL,
+  total_tickets INT NOT NULL,
+  total_amount DECIMAL(10, 2) NOT NULL,
+  order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (event_id) REFERENCES events(event_id)
+);

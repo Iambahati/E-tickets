@@ -98,34 +98,66 @@ class Client extends Db
 		return $result;
 	}
 
-	public function orders($userId, $eventId, $no_tickets) {
+
+	public function orders($userId, $eventId, $no_tickets)
+	{
 		try {
 			$this->conn->beginTransaction();
 
 			// Check if enough tickets are available
-			$checkSql = "SELECT ticket_quantity_available FROM events WHERE event_id = :eventId";
+			$checkSql = "SELECT ticket_quantity_available, ticket_price, title, description, start_datetime, end_datetime, location_details FROM events WHERE event_id = :eventId";
 			$checkStmt = $this->conn->prepare($checkSql);
 			$checkStmt->execute(['eventId' => $eventId]);
-			$availableTickets = $checkStmt->fetchColumn();
+			$eventData = $checkStmt->fetch(PDO::FETCH_ASSOC);
 
-			if ($availableTickets < $no_tickets) {
+			if ($eventData['ticket_quantity_available'] < $no_tickets) {
 				throw new Exception("Not enough tickets available");
 			}
 
 			// Update ticket quantity
 			$updateSql = "UPDATE events
-						  SET ticket_quantity_available = ticket_quantity_available - :no_tickets
-						  WHERE event_id = :eventId";
+                      SET ticket_quantity_available = ticket_quantity_available - :no_tickets
+                      WHERE event_id = :eventId";
 			$updateStmt = $this->conn->prepare($updateSql);
 			$updateStmt->execute(['no_tickets' => $no_tickets, 'eventId' => $eventId]);
 
 			// Insert into tickets table
 			$insertSql = "INSERT INTO tickets (event_id, customer_id, ticket_status, quantity)
-						  VALUES (:eventId, :userId, 'Purchased', :no_tickets)";
+                      VALUES (:eventId, :userId, 'Purchased', :no_tickets)";
 			$insertStmt = $this->conn->prepare($insertSql);
 			$insertStmt->execute(['eventId' => $eventId, 'userId' => $userId, 'no_tickets' => $no_tickets]);
 
+			// Calculate total amount
+			$totalAmount = $eventData['ticket_price'] * $no_tickets;
+
+			// Generate random order hash with uppercase letters
+			$orderHash = strtoupper(substr(bin2hex(random_bytes(8)), 0, 8));
+
+			// Insert into orders table
+			$orderSql = "INSERT INTO orders (order_hash, user_id, event_id, total_tickets, total_amount)
+                     VALUES (:orderHash, :userId, :eventId, :totalTickets, :totalAmount)";
+			$orderStmt = $this->conn->prepare($orderSql);
+			$orderStmt->execute([
+				'orderHash' => $orderHash,
+				'userId' => $userId,
+				'eventId' => $eventId,
+				'totalTickets' => $no_tickets,
+				'totalAmount' => $totalAmount
+			]);
+
 			$this->conn->commit();
+
+			// Prepare data for email
+			$email = $this->getUserEmailById($userId);
+			$eventName = $eventData['title'];
+			$description = $eventData['description'];
+			$ticketPrice = $eventData['ticket_price'];
+			$venue = $eventData['location_details'];
+
+			// Call the send_email.php script in the background
+			$command = "php send_email.php " . escapeshellarg($email) . " " . escapeshellarg($eventName) . " " . escapeshellarg($venue) . " " . escapeshellarg($description) . " " . escapeshellarg($ticketPrice) . " " . escapeshellarg($orderHash) . " " . escapeshellarg($totalAmount) . " " . escapeshellarg($no_tickets) . " > /dev/null 2>&1 &";
+			exec($command);
+
 			return true;
 		} catch (Exception $e) {
 			$this->conn->rollBack();
@@ -134,14 +166,36 @@ class Client extends Db
 		}
 	}
 
+	public function getUserEmailById($userId)
+	{
+		$sql = "SELECT email FROM users WHERE id = :userId";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute(['userId' => $userId]);
+		$result = $stmt->fetch(PDO::FETCH_ASSOC);
+		return $result['email'];
+	}
+
+
+	public function getTicketsByOrderHash($orderHash)
+	{
+		$sql = "SELECT t.ticket_id, t.event_id, t.customer_id, t.purchase_date, t.ticket_status, t.quantity
+            FROM tickets t
+            JOIN orders o ON t.event_id = o.event_id AND t.customer_id = o.user_id
+            WHERE o.order_hash = :orderHash";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute(['orderHash' => $orderHash]);
+		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		return $result;
+	}
+
 	// public function orders($userId, $eventId, $no_tickets)
 	// {
 	// 	try {
-			
-			
+
+
 	// 		// // SQL to insert into the tickets table, including the quantity
 	// 		$insertSql = "INSERT INTO tickets (event_id, customer_id, ticket_status, quantity)
-    //                       VALUES (:eventId, :userId, 'Purchased', :no_tickets)";
+	//                       VALUES (:eventId, :userId, 'Purchased', :no_tickets)";
 	// 		$insertStmt = $this->conn->prepare($insertSql);
 	// 		$result = $insertStmt->execute([
 	// 			'eventId' => $eventId,

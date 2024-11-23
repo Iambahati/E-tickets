@@ -135,11 +135,12 @@ unset($_SESSION['success'], $_SESSION['error']);
                 <tr>
                   <th>Thumbnail</th>
                   <th>Event Title</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
+                  <th>Event Duration</th>
                   <th>Ticket Price (KSh)</th>
                   <th>Available Tickets</th>
                   <th>Status</th>
+                  <th>Attendees</th>
+                  <th>Sales</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -150,8 +151,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                       <img src="../assets/images/uploads/<?= basename($event['event_photo']) ?>" alt="Event Photo" />
                     </td>
                     <td><?= $event['title'] ?></td>
-                    <td><?= date('d M Y, H:i A', strtotime($event['start_datetime'])) ?></td>
-                    <td><?= date('d M Y, H:i A', strtotime($event['end_datetime'])) ?></td>
+                    <td><?= date('D, M d, Y', strtotime($event['start_datetime'])) ?> - <?= date('D, M d, Y', strtotime($event['end_datetime'])) ?></td>
                     <td> <?= $event['ticket_price'] ?> </td>
                     <td> <?= $event['ticket_quantity_available'] ?></td>
                     <td>
@@ -161,15 +161,20 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </td>
 
                     <td>
+                      <a href="event-attendees.php?event_id=<?= $event['event_id'] ?>" target="_blank" style="display: flex; align-items: center; gap: 5px; color: #388e3c;"><i class='bx bx-group' style="text-decoration: none; font-size: 20px;"></i><span style="text-decoration: underline;">View</span></a>
+                    </td>
+                    <td>
+                        <a href="event-sales.php?event_id=<?= $event['event_id'] ?>" target="_blank" style="display: flex; align-items: center; gap: 5px; color: #388e3c;"><i class='bx bx-dollar' style="text-decoration: none; font-size: 20px;"></i><span style="text-decoration: underline;">View</span></a>
+                    </td>
+                      <td>
                       <div class="actions">
-                        <!-- <a href="#" id=""class="edit">View</a> -->
 
                         <a href="#" class="edit" id='openEditModalButton' data-id="<?= $event['event_id'] ?>" data-title="<?= $event['title'] ?>" data-description="<?= $event['description'] ?>" data-location="<?= $event['location_details'] ?>" data-type="<?= $event['event_type'] ?>" data-start="<?= $event['start_datetime'] ?>" data-end="<?= $event['end_datetime'] ?>" data-price="<?= $event['ticket_price'] ?>" data-capacity="<?= $event['ticket_quantity_available'] ?>" data-poster="<?= $event['event_photo'] ?>">
                           Edit
                         </a>
 
-                        <a href="#" class="delete"  id='openDeleteModalButton' data-id="<?= $event['event_id'] ?>" data-title="<?= $event['title'] ?>">Delete</a>
-                          </div>
+                        <a href="#" class="delete" id='openDeleteModalButton' data-id="<?= $event['event_id'] ?>" data-title="<?= $event['title'] ?>">Delete</a>
+                      </div>
 
                   </tr>
                 <?php endforeach; ?>
@@ -398,140 +403,139 @@ unset($_SESSION['success'], $_SESSION['error']);
           <form action="../assets/php/organizer_action.php" method="post" class="form">
             <?= Utils::insertCsrfToken() ?>
             <input type="hidden" name="eventId" id="delete-event-id" name="event_id">
-              <!-- Delete Event Button -->
-              <button type="submit" name="delete-event-btn" class="delete-event-btn">Delete Event</button>
-            </div>
-          </form>
+            <!-- Delete Event Button -->
+            <button type="submit" name="delete-event-btn" class="delete-event-btn">Delete Event</button>
         </div>
+        </form>
       </div>
-      <!-- Edit Event Modal Close -->
+  </div>
+  <!-- Edit Event Modal Close -->
 
-    </main>
-    <!-- Main Close -->
+  </main>
+  <!-- Main Close -->
   </div>
   <!-- =============Content CLose================ -->
 
   <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Set up event listeners
-    setupModalListeners();
-    setupEditModal(); // Init edit modal setup
-});
-
-// Function to toggle the modal (open/close)
-function toggleModal(modalId, action) {
-    const modal = document.getElementById(modalId);
-    modal.style.display = action === 'open' ? 'block' : 'none';
-}
-
-// Function to set up modal event listeners
-function setupModalListeners() {
-    // Attach event listener to close the modal when the 'X' is clicked
-    document.querySelectorAll('.close-modal').forEach(closeButton => {
-        closeButton.addEventListener('click', function() {
-            const modalId = this.closest('.modal').id;
-            toggleModal(modalId, 'close');
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set up event listeners
+      setupModalListeners();
+      setupEditModal(); // Init edit modal setup
     });
 
-    // Prevent closing the modal when clicking outside of it
-    window.onclick = function(event) {
+    // Function to toggle the modal (open/close)
+    function toggleModal(modalId, action) {
+      const modal = document.getElementById(modalId);
+      modal.style.display = action === 'open' ? 'block' : 'none';
+    }
+
+    // Function to set up modal event listeners
+    function setupModalListeners() {
+      // Attach event listener to close the modal when the 'X' is clicked
+      document.querySelectorAll('.close-modal').forEach(closeButton => {
+        closeButton.addEventListener('click', function() {
+          const modalId = this.closest('.modal').id;
+          toggleModal(modalId, 'close');
+        });
+      });
+
+      // Prevent closing the modal when clicking outside of it
+      window.onclick = function(event) {
         const modals = document.querySelectorAll('.modal');
         modals.forEach(modal => {
-            if (event.target == modal) {
-                toggleModal(modal.id, 'close');
-            }
+          if (event.target == modal) {
+            toggleModal(modal.id, 'close');
+          }
         });
-    };
+      };
 
-    // Attach event listener to open the create event modal
-    document.getElementById('openModalButton').addEventListener('click', function() {
+      // Attach event listener to open the create event modal
+      document.getElementById('openModalButton').addEventListener('click', function() {
         toggleModal('createEventModal', 'open');
-    });
-}
+      });
+    }
 
-// Function to set up the edit modal
-function setupEditModal() {
-    const openEditModalButtons = document.querySelectorAll('.edit');
+    // Function to set up the edit modal
+    function setupEditModal() {
+      const openEditModalButtons = document.querySelectorAll('.edit');
 
-    openEditModalButtons.forEach(button => {
+      openEditModalButtons.forEach(button => {
         button.addEventListener('click', function(event) {
-            event.preventDefault();
-            openEditModal(this); // Pass the current btn to the openEditModal function
+          event.preventDefault();
+          openEditModal(this); // Pass the current btn to the openEditModal function
         });
-    });
-}
+      });
+    }
 
-// Function to open the edit modal and populate fields
-function openEditModal(button) {
-    // Get data attributes from the button element
-    const id = button.getAttribute('data-id');
-    const title = button.getAttribute('data-title');
-    const description = button.getAttribute('data-description');
-    const location = button.getAttribute('data-location');
-    const type = button.getAttribute('data-type');
-    const start = button.getAttribute('data-start');
-    const end = button.getAttribute('data-end');
-    const price = button.getAttribute('data-price');
-    const capacity = button.getAttribute('data-capacity');
+    // Function to open the edit modal and populate fields
+    function openEditModal(button) {
+      // Get data attributes from the button element
+      const id = button.getAttribute('data-id');
+      const title = button.getAttribute('data-title');
+      const description = button.getAttribute('data-description');
+      const location = button.getAttribute('data-location');
+      const type = button.getAttribute('data-type');
+      const start = button.getAttribute('data-start');
+      const end = button.getAttribute('data-end');
+      const price = button.getAttribute('data-price');
+      const capacity = button.getAttribute('data-capacity');
 
-    // Populate the modal fields
-    document.getElementById('edit-event-id').value = id;
-    document.getElementById('edit-eventName').value = title;
-    document.getElementById('edit-description').value = description;
-    document.getElementById('edit-eventLocation').value = location;
-    document.getElementById('edit-eventType').value = type;
-    document.getElementById('edit-startDate').value = start;
-    document.getElementById('edit-endDate').value = end;
-    document.getElementById('edit-ticketPrice').value = price;
-    document.getElementById('edit-ticketCapacity').value = capacity;
+      // Populate the modal fields
+      document.getElementById('edit-event-id').value = id;
+      document.getElementById('edit-eventName').value = title;
+      document.getElementById('edit-description').value = description;
+      document.getElementById('edit-eventLocation').value = location;
+      document.getElementById('edit-eventType').value = type;
+      document.getElementById('edit-startDate').value = start;
+      document.getElementById('edit-endDate').value = end;
+      document.getElementById('edit-ticketPrice').value = price;
+      document.getElementById('edit-ticketCapacity').value = capacity;
 
-    // Open the modal
-    toggleModal('editEventModal', 'open');
-}
+      // Open the modal
+      toggleModal('editEventModal', 'open');
+    }
 
-// Function to close the modal
-function closeEditModal() {
-    toggleModal('editEventModal', 'close');
-}
+    // Function to close the modal
+    function closeEditModal() {
+      toggleModal('editEventModal', 'close');
+    }
 
-// Function to open the delete modal and populate data
-function openDeleteModal(event) {
-    event.preventDefault();
-    const button = event.currentTarget;
-    const modal = document.getElementById('deleteEventModal');
+    // Function to open the delete modal and populate data
+    function openDeleteModal(event) {
+      event.preventDefault();
+      const button = event.currentTarget;
+      const modal = document.getElementById('deleteEventModal');
 
-    // Populate form fields
-    document.getElementById('delete-event-id').value = button.dataset.id;
-    document.getElementById('del-event').textContent = `Delete "${button.dataset.title}"`;
+      // Populate form fields
+      document.getElementById('delete-event-id').value = button.dataset.id;
+      document.getElementById('del-event').textContent = `Delete "${button.dataset.title}"`;
 
-    toggleModal('deleteEventModal', 'open');
-}
+      toggleModal('deleteEventModal', 'open');
+    }
 
-// Event listeners for delete modal
-document.addEventListener('DOMContentLoaded', function() {
-    // Open create event modal
-    document.getElementById('openModalButton').addEventListener('click', function() {
+    // Event listeners for delete modal
+    document.addEventListener('DOMContentLoaded', function() {
+      // Open create event modal
+      document.getElementById('openModalButton').addEventListener('click', function() {
         toggleModal('createEventModal', 'open');
-    });
+      });
 
-    // Open edit event modal (for multiple events)
-    document.querySelectorAll('.edit').forEach(button => {
+      // Open edit event modal (for multiple events)
+      document.querySelectorAll('.edit').forEach(button => {
         button.addEventListener('click', function(event) {
-            event.preventDefault();
-            openEditModal(this);
+          event.preventDefault();
+          openEditModal(this);
         });
-    });
+      });
 
-    // Open delete event modal (for multiple events)
-    document.querySelectorAll('.delete').forEach(button => {
+      // Open delete event modal (for multiple events)
+      document.querySelectorAll('.delete').forEach(button => {
         button.addEventListener('click', function(event) {
-            event.preventDefault();
-            openDeleteModal(event);
+          event.preventDefault();
+          openDeleteModal(event);
         });
+      });
     });
-});
-
   </script>
 
 
