@@ -1,5 +1,5 @@
 <?php
-
+// buyer signin.php
 require_once 'utils.php';
 
 if (isset($_SESSION['accRole'])) {
