@@ -163,7 +163,7 @@ class Utils
     public static function redirect_with_message(string $url, string $type, string $msg): void
     {
         // Store the message in the $_SESSION superglobal using the showMessage() function.
-        $_SESSION[$type] = self::showMessage($type, $msg); 
+        $_SESSION[$type] = self::showMessage($type, $msg);
         // Use the redirect_to() function to redirect the user to the given URL.
         self::redirect_to($url);
     }
@@ -178,5 +178,64 @@ class Utils
 
         // Redirect the user to the given URL
         self::redirect_to($url);
+    }
+
+
+    /**
+     * Logs messages and exceptions to a log file.
+     *
+     * @param string $type The type of log message (e.g., error, warning, info).
+     * @param string $message The log message.
+     * @param Exception|null $exception Optional exception to log details from.
+     *
+     * @return void
+     */
+    public static function logger(string $type, string $message, ?Exception $exception = null): void
+    {
+        try {
+            // Create logs directory if it doesn't exist
+            $logDir = __DIR__ . '/logs';
+            if (!file_exists($logDir)) {
+                mkdir($logDir, 0755, true);
+            }
+
+            // Format current timestamp
+            $timestamp = date('D M d H:i:s.u Y');
+
+            // Build log message
+            $logMessage = sprintf(
+                "[%s] [%s] %s",
+                $timestamp,
+                strtoupper($type),
+                $message
+            );
+
+            // Add exception details if provided
+            if ($exception) {
+                $logMessage .= sprintf(
+                    "\nException: %s\nFile: %s\nLine: %d\nTrace:\n%s",
+                    $exception->getMessage(),
+                    $exception->getFile(),
+                    $exception->getLine(),
+                    $exception->getTraceAsString()
+                );
+            }
+
+            // Add server/request information
+            $logMessage .= sprintf(
+                "\nIP: %s\nURI: %s\nUser Agent: %s\n",
+                $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                $_SERVER['REQUEST_URI'] ?? 'unknown',
+                $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+            );
+
+            // Write to single log file with append mode
+            $logFile = $logDir . '/system_logs.txt';
+            file_put_contents($logFile, $logMessage . "\n\n", FILE_APPEND);
+        } catch (Exception $e) {
+            // Fallback to PHP's error_log if custom logging fails
+            error_log("Logger failed: " . $e->getMessage());
+            error_log($message);
+        }
     }
 }
