@@ -27,10 +27,6 @@ $interfaces = $role == 2 ? new Organizer() : new Client();
 
 $userData = $interfaces->fetchUserDetails($userId);
 
-$eventId = $_GET['event_id'] ?? null;
-
-$sales_data = $interfaces->getEventSales($eventId);
-
 // coalescing operator `??`
 // checks if a variable exists and is not null,
 // and if it doesn't, it returns a default value
