@@ -64,7 +64,7 @@ if (isset($_POST["organizer-signin-btn"])) {
         $result = $action->loginIntoMerchantAccount($email);
 
         if (!empty($result)) {
-            if( $result['role'] !== '2'){
+            if ($result['role'] !== '2') {
                 Utils::redirect_with_message('../../buyer_signin.php', 'error', 'User not found.');
             }
             // If passwords match, login the user and redirect to the appropriate dashboard
@@ -117,9 +117,9 @@ if (isset($_POST['update-profile-btn'])) {
 
         $data = [];
         foreach ($fields as $field => $label) {
-            $data[$field] = isset($_POST[$field]) && !empty($_POST[$field]) 
-            ? Utils::sanitizeInput($_POST[$field])
-            : Utils::redirect_with_message('../../interfaces/profile.php', 'error', $label ."cannot be blank!");
+            $data[$field] = isset($_POST[$field]) && !empty($_POST[$field])
+                ? Utils::sanitizeInput($_POST[$field])
+                : Utils::redirect_with_message('../../interfaces/profile.php', 'error', $label . "cannot be blank!");
         }
 
         extract($data);
@@ -131,10 +131,94 @@ if (isset($_POST['update-profile-btn'])) {
         } else {
             Utils::redirect_with_message('../../interfaces/profile.php', 'error', 'Failed to update profile.');
         }
-
-       
     } catch (Exception $e) {
         Utils::redirect_with_message('../../interfaces/profile.php', 'error', 'An error occurred: ' . $e->getMessage());
+    }
+}
+
+if (isset($_POST["forgot-passwd-btn"])) {
+    try {
+        if (!Utils::verifyCsrfToken()) {
+            Utils::redirect_with_message('../../forgot_password.php', 'error', 'Request could not be validated.');
+        }
+
+        $email = isset($_POST["email"]) && !empty($_POST["email"]) ? Utils::sanitizeInput($_POST["email"]) : Utils::redirect_with_message('../../forgot_password.php', 'error', 'Email cannot be blank!');
+
+        $client = new Organizer();
+        $user = $client->user_exists($email);
+
+        if ($user) {
+            $token = bin2hex(random_bytes(32));
+            $client->passwordResetToken($email, $token);
+
+            $mailBody = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;'>
+                <div style='text-align: center; margin-bottom: 30px;'>
+                    <h2 style='color: #4CAF50; margin-bottom: 10px;'>Password Reset Request</h2>
+                </div>
+            
+                <p style='margin-bottom: 20px; line-height: 1.5;'>Hello,</p>
+            
+                <p style='margin-bottom: 20px; line-height: 1.5;'>
+                    We have received a request to reset your password for your E-Tickets account. 
+                    To proceed with resetting your password, please click the button below:
+                </p>
+            
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='http://localhost/E-tickets/e-ticketing/reset_password.php?token=" . $token . "&email=" . $email . "&ref=client' 
+                       style='background-color: #4CAF50; 
+                              color: white; 
+                              padding: 12px 30px; 
+                              text-decoration: none; 
+                              border-radius: 5px; 
+                              display: inline-block; 
+                              font-weight: bold;
+                              font-size: 16px;'>
+                        Reset Password
+                    </a>
+                </div>
+            
+                <p style='margin-bottom: 20px; line-height: 1.5; color: #666; font-size: 14px;'>
+                    If you did not request this password reset, please ignore this email and your password will remain unchanged.
+                </p>
+            
+                <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;'>
+                    <p>This is an automated email, please do not reply.</p>
+                </div>
+            </div>";
+
+            if (Mailer::sendMail($email, 'Password Reset', $mailBody)) {
+                Utils::redirect_with_message('../../forgot_password.php', 'success', 'If an account with this email exists, a password reset link will be sent to it.');
+            } else {
+                Utils::redirect_with_message('../../forgot_password.php', 'error', 'Failed to send password reset link.');
+            }
+        } else {
+            Utils::redirect_with_message('../../forgot_password.php', 'error', 'If an account with this email exists, a password reset link will be sent to it.');
+        }
+    } catch (Exception $e) {
+        Utils::redirect_with_message('../../forgot_password.php', 'error', 'An error occurred: ' . $e->getMessage());
+    }
+}
+
+if (isset($_POST["reset-passwd-btn"])) {
+    try {
+        if (!Utils::verifyCsrfToken()) {
+            Utils::redirect_with_message('../../forgot_password.php', 'error', 'Request could not be validated.');
+        }
+
+        $email = isset($_POST["email"]) && !empty($_POST["email"]) ? Utils::sanitizeInput($_POST["email"]) : Utils::redirect_with_message('../../reset_password.php', 'error', 'Email cannot be blank!');
+
+        $pass = isset($_POST["password"]) && !empty($_POST["password"]) ? Utils::sanitizeInput($_POST["password"]) : Utils::redirect_with_message('../../reset_password.php', 'error', 'Password cannot be blank!');
+        $hpass = password_hash($pass, PASSWORD_DEFAULT);
+
+        $client = new Organizer();
+        if ($client->resetPassword($email, $hpass)) {
+            Utils::redirect_with_message('../../organizer_signin.php', 'success', 'Password reset successful. Please login to continue.');
+        } else {
+            Utils::redirect_with_message('../../reset_password.php', 'error', 'Failed to reset password.');
+        }
+    } catch (Exception $e) {
+        Utils::redirect_with_message('../../forgot_password.php', 'error', 'An error occurred: ' . $e->getMessage());
     }
 }
 

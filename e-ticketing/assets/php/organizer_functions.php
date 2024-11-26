@@ -103,6 +103,107 @@ class Organizer extends Db
 		}
 	}
 
+		/**
+	 * Updates the password reset token for the specified email.
+	 *
+	 * @param string $email The email of the user
+	 * @param string $token The password reset token
+	 * @return bool Returns true on success, or false on failure
+	 */
+	public function passwordResetToken($email, $token)
+	{
+		try {
+			$sql = "UPDATE users 
+				SET reset_token = :token,
+					reset_token_expires = DATE_ADD(NOW(), INTERVAL 5 MINUTE),
+					reset_token_consumed = FALSE
+				WHERE email = :email";
+
+			$stmt = $this->conn->prepare($sql);
+			return $stmt->execute([
+				'token' => $token,
+				'email' => $email
+			]);
+		} catch (PDOException $e) {
+			error_log("Error updating password reset token: " . $e->getMessage());
+			return false;
+		}
+	}
+
+
+	/**
+	 * Validates the password reset token.
+	 *
+	 * @param string $token The password reset token to validate.
+	 * @return int Returns 0 if the token is valid and newly consumed, 
+	 *             2 if the token is already consumed, 
+	 *             3 if the token is expired, 
+	 *             4 if the token is invalid, 
+	 *             or 1 if an error occurred.
+	 */
+	public function validateResetToken($token)
+	{
+		try {
+			$sql = "SELECT id, reset_token_expires, reset_token_consumed 
+					FROM users 
+					WHERE reset_token = :token";
+
+			$stmt = $this->conn->prepare($sql);
+			$stmt->execute(['token' => $token]);
+
+			if ($stmt->rowCount() > 0) {
+				$result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+				if ($result['reset_token_consumed']) {
+					return 1; // Error: Already consumed
+				}
+
+				if (strtotime($result['reset_token_expires']) < time()) {
+					return 2; // Error: Expired
+				}
+
+				// Token is valid, mark as consumed
+				$updateSql = "UPDATE users 
+							 SET reset_token_consumed = TRUE 
+							 WHERE reset_token = :token";
+				$updateStmt = $this->conn->prepare($updateSql);
+				$updateStmt->execute(['token' => $token]);
+
+				return 0; // Success: Valid and newly consumed
+			}
+
+			return 3; // Error: Invalid token
+		} catch (PDOException $e) {
+			Utils::logger("Error validating reset token",  $e->getMessage());
+			return 1; // Error: Exception occurred
+		}
+	}
+
+	/**
+	 * Updates the password for the specified email.
+	 *
+	 * @param string $email The email of the user
+	 * @param string $password The new password
+	 * @return bool Returns true on success, or false on failure
+	 */
+	public function resetPassword($email, $password){
+		try {
+			$sql = "UPDATE users 
+					SET password = :password 
+					WHERE email = :email";
+
+			$stmt = $this->conn->prepare($sql);
+			return $stmt->execute([
+				'password' => $password,
+				'email' => $email
+			]);
+		} catch (PDOException $e) {
+			error_log("Error updating password: " . $e->getMessage());
+			return false;
+		}
+	}
+
+
 
 	public function addEvent($organizer_id, $title, $description, $location_details, $event_type, $start_datetime, $end_datetime, $ticket_price, $ticket_quantity_available, $event_photo)
 	{

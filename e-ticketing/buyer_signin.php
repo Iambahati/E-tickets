@@ -66,10 +66,10 @@ unset($_SESSION['success'], $_SESSION['error']);
             </form>
             <ul class="inline-links">
                 <li class="inline-links-item">
-                    <a href="p"><span class="text">Forgot Password?</span></a>
+                    <a href="forgot_password.php" class="link"><span class="text">Forgot Password?</span></a>
                 </li>
                 <li class="inline-links-item">
-                    <a href="buyer_signup.php"><span class="text">Sign Up</span></a>
+                <span>Dont have an account? &#160&#160&#160<a href="buyer_signup.php" class="link"><span class="text">Sign Up</span></a>
                 </li>
             </ul>
 

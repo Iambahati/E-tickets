@@ -1,18 +1,13 @@
 <?php
 
 // https://github.com/PHPMailer/PHPMailer
+// Load Composer's autoloader first
+require __DIR__ . '/vendor/autoload.php';
+
 // Import PHPMailer classes into the global namespace
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
-
-
-
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
-
-// Load Composer's autoloader
-require 'vendor/autoload.php';
 
 /**
  * Class MailSender
@@ -29,11 +24,43 @@ class Mailer
 {
     // Constants
     const APP_NAME = 'ETicketingAfrica';
-    public static function logger(string $msg): void
+    
+    
+    public static function logger(string $message): void
     {
-        $log = sprintf('[%s] [%s:%s] [%s] %s', date('D M d H:i:s', $time = microtime(true)) . sprintf('.%06d', ($time - floor($time)) * 1000000) . ' ' . date('Y', $time), 'php', 'warn', 'pid ' . getmypid(), $msg);
-        error_log($log);
-        file_put_contents('email_logs.txt', $log . PHP_EOL, FILE_APPEND);
+        try {
+            // Create logs directory if it doesn't exist
+            $logDir = __DIR__ . '/logs';
+            if (!file_exists($logDir)) {
+                mkdir($logDir, 0755, true);
+            }
+
+            // Format current timestamp
+            $timestamp = date('D M d H:i:s.u Y');
+
+            // Build log message
+            $logMessage = sprintf(
+                "[%s] %s",
+                $timestamp,
+                $message
+            );
+
+            // Add server/request information
+            $logMessage .= sprintf(
+                "\nIP: %s\nURI: %s\nUser Agent: %s\n",
+                $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                $_SERVER['REQUEST_URI'] ?? 'unknown',
+                $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+            );
+
+            // Write to single log file with append mode
+            $logFile = $logDir . '/email_logs.txt';
+            file_put_contents($logFile, $logMessage . "\n\n", FILE_APPEND);
+        } catch (Exception $e) {
+            // Fallback to PHP's error_log if custom logging fails
+            error_log("Logger failed: " . $e->getMessage());
+            error_log($message);
+        }
     }
 
     public static function sendMail(string $to, string $subject, string $body): bool
@@ -88,7 +115,7 @@ class Mailer
     }
 
 
-    
+
     public static function sendPaymentReceiptByEmail($email, $eventName, $venue, $description, $ticketPrice, $orderHash, $totalAmount, $totalTickets)
     {
         $subject = "Receipt for Order {$orderHash}";
@@ -103,7 +130,7 @@ class Mailer
         $mail->setFrom("noreply.ticketingapp@gmail.com", self::APP_NAME);
         $mail->addAddress($email);
         $mail->Subject = $subject;
-    
+
         $mail->Body = "
         <html>
         <head>
@@ -174,7 +201,7 @@ class Mailer
         </html>
         ";
         $mail->IsHTML(true);
-    
+
         // Generate the payment receipt PDF
         $htmlContent = "
         <html>
@@ -251,19 +278,19 @@ class Mailer
         </body>
         </html>
         ";
-    
+
         // create a new mPDF instance and render HTML to PDF
         $mpdf = new \Mpdf\Mpdf();
         $mpdf->WriteHTML($htmlContent);
         $pdfOutput = $mpdf->Output('', 'S'); // gets PDF as a string
-    
+
         // write the PDF to a temporary file
         $pdfTempFilePath = sys_get_temp_dir() . '/' . $orderHash . '.pdf';
         file_put_contents($pdfTempFilePath, $pdfOutput);
-    
+
         // attach the PDF to the email
         $mail->addAttachment($pdfTempFilePath);
-    
+
         // send the email and handle errors
         if (!$mail->send()) {
             self::logger('Sorry, something went wrong: ' . $mail->ErrorInfo);

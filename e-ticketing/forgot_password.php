@@ -2,25 +2,6 @@
 
 require_once 'utils.php';
 
-if (isset($_SESSION['accRole'])) {
-    switch ($_SESSION['accRole']) {
-        case 1:
-            Utils::redirect_to("interfaces/admin.php");
-            break;
-        case 2:
-            Utils::redirect_to("interfaces/org-dashboard.php");
-            break;
-        case 3:
-            Utils::redirect_to("interfaces/events.php");
-            break;
-        default:
-            break;
-    }
-} else {
-    // Handle the case where 'userType' is not set, if needed
-    // For example, redirect to a login page or do nothing
-    // Utils::redirect_to('login.php');
-}
 
 // coalescing operator `??`
 // checks if a variable exists and is not null,
@@ -36,7 +17,7 @@ unset($_SESSION['success'], $_SESSION['error']);
 <html lang="en">
 
 <head>
-    <title>Merchant Sign In</title>
+    <title>E-ticketing Forgot Password</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
@@ -45,33 +26,29 @@ unset($_SESSION['success'], $_SESSION['error']);
 <body>
     <div class="theme-dark">
         <div class="container">
-            <form action="assets/php/organizer_action.php" method="post" class="form">
+            <form action="assets/php/action.php" method="post" class="form">
                 <?= Utils::insertCsrfToken() ?>
-                <h1>Merchant Sign In</h1>
+                <h1>Forgot Password</h1>
                 <?= $message ?>
+                <p> Enter your email address to reset your password</p>
+                <br>
                 <div class="form-field">
-                    <label for="name">Email:</label>
                     <input type="text" name="email" placeholder="Your Email address">
                     <small></small>
                 </div>
-
                 <div class="form-field">
-                    <label for="password">Password:</label>
-                    <input type="text" name="password" placeholder="Password">
-                    <small></small>
-                </div>
-                <div class="form-field">
-                    <button type="submit" name="organizer-signin-btn" class="btn">Sign In</button>
+                    <button type="submit" name="forgot-passwd-btn" class="btn">Continue</button>
                 </div>
             </form>
+
             <ul class="inline-links">
-                <li class="inline-links-item">
-                <a href="forgot_password.php" class="link"><span class="text">Forgot Password?</span></a>
-                </li>
-                <li class="inline-links-item">
-                    <a href="organizer_signup.php" class="link"><span class="text">Sign Up</span></a>
-                </li>
-            </ul>
+            <li class="inline-links-item">
+                <span>Already an event organizer? &#160&#160&#160<a class="link" href="organizer_signin.php">Sign in</a></span>
+            </li>
+            <li class="inline-links-item">
+                <span>Want to views events? &#160&#160&#160<a class="link" href="buyer_signin.php">Sign in</a></span>
+            </li>
+        </ul>
 
         </div>
 
@@ -79,13 +56,12 @@ unset($_SESSION['success'], $_SESSION['error']);
         <script>
             // get references to the form inputs &  form element
             const email = document.querySelector('[name="email"]'),
-                passwordEl = document.querySelector('[name="password"]'),
-                btn = document.querySelector('[name="organizer-signin-btn"]');
+            btn = document.querySelector('[name="forgot-passwd-btn"]');
+            ;
 
             // Map of input elements to their friendly field names
             const fieldLabels = {
                 email: 'Email',
-                password: 'Password'
             };
 
 
@@ -127,7 +103,6 @@ unset($_SESSION['success'], $_SESSION['error']);
             // define a function to check the username, email and password inputs
 
             const checkEmail = () => isValid(email, /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/, 'Email is not valid.');
-            const checkPassword = () => isValid(passwordEl, /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/, 'Password must have at least 8 characters that include at least 1 lowercase character, 1 uppercase character, 1 number, and 1 special character.');
 
             // Event listener for the form submit button
             btn.addEventListener('click', (e) => {
@@ -136,10 +111,6 @@ unset($_SESSION['success'], $_SESSION['error']);
                 let isValidForm = true;
 
                 if (!checkEmail()) {
-                    isValidForm = false;
-                }
-
-                if (!checkPassword()) {
                     isValidForm = false;
                 }
 
