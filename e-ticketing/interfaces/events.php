@@ -62,9 +62,9 @@ unset($_SESSION['success'], $_SESSION['error']);
                 <a href="history.php" class=""><i class='bx bx-history'></i>My History</a>
             </li>
 
-            <!-- <li>
+           <li>
                 <a href="profile.php" class=""><i class='bx bx-user'></i>Profile</a>
-            </li> -->
+            </li>
 
             <li>
                 <a href="../assets/php/logout.php" class="logout"><i class="bx bx-log-out-circle"></i>Logout</a>

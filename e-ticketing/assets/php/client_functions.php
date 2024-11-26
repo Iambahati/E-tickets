@@ -64,6 +64,49 @@ class Client extends Db
 	}
 
 
+	public function fetchUserDetails($userId)
+	{
+		$sql = "SELECT first_name, last_name, email, contact, password FROM users WHERE id = :userId";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute(['userId' => $userId]);
+		$result = $stmt->fetch(PDO::FETCH_ASSOC);
+		return $result;
+	}
+
+	/**
+	 * Updates the details of a user in the database.
+	 *
+	 * @param int $userId The ID of the user to update.
+	 * @param string $firstName The new first name of the user.
+	 * @param string $lastName The new last name of the user.
+	 * @param string $email The new email address of the user.
+	 * @param string $contact The new contact number of the user.
+	 * 
+	 * @return bool Returns true on success, or false on failure.
+	 */
+	public function updateUserDetails($userId, $firstName, $lastName, $email, $contact)
+	{
+		try {
+			$sql = "UPDATE users SET first_name = :firstName, last_name = :lastName, email = :email, contact = :contact WHERE id = :userId";
+
+			$stmt = $this->conn->prepare($sql);
+
+			$params = [
+				'firstName' => $firstName,
+				'lastName' => $lastName,
+				'email' => $email,
+				'contact' => $contact,
+				'userId' => $userId
+			];
+
+			return $stmt->execute($params);
+		} catch (PDOException $e) {
+			error_log("Error updating user details: " . $e->getMessage());
+			return false;
+		}
+	}
+
+
 	public function fetchEvents()
 	{
 		$sql = "SELECT * 

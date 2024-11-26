@@ -102,6 +102,42 @@ if (isset($_POST["organizer-signin-btn"])) {
     }
 }
 
+if (isset($_POST['update-profile-btn'])) {
+    try {
+        if (!Utils::verifyCsrfToken()) {
+            Utils::redirect_with_message('../../interfaces/profile.php', 'error', 'Request could not be validated.');
+        }
+
+        $fields = [
+            'userId' => 'User ID',
+            'orgName' => 'Organisation name',
+            'email' => 'Email',
+            'contact' => 'Contact'
+        ];
+
+        $data = [];
+        foreach ($fields as $field => $label) {
+            $data[$field] = isset($_POST[$field]) && !empty($_POST[$field]) 
+            ? Utils::sanitizeInput($_POST[$field])
+            : Utils::redirect_with_message('../../interfaces/profile.php', 'error', $label ."cannot be blank!");
+        }
+
+        extract($data);
+
+        $client = new Organizer();
+        if ($client->updateOrgDetails($userId, $orgName, $email, $contact)) {
+            $_SESSION['clientName'] = $orgName;
+            Utils::redirect_with_message('../../interfaces/profile.php', 'success', 'Profile updated successfully.');
+        } else {
+            Utils::redirect_with_message('../../interfaces/profile.php', 'error', 'Failed to update profile.');
+        }
+
+       
+    } catch (Exception $e) {
+        Utils::redirect_with_message('../../interfaces/profile.php', 'error', 'An error occurred: ' . $e->getMessage());
+    }
+}
+
 // Handle add event request
 if (isset($_POST['create-event-btn'])) {
     try {

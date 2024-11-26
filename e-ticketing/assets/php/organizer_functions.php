@@ -45,6 +45,9 @@ class Organizer extends Db
 		return true;
 	}
 
+
+
+
 	/**
 	 * @param string $email A users's email
 	 * @return array
@@ -59,6 +62,47 @@ class Organizer extends Db
 		$result = $stmt->fetch(PDO::FETCH_ASSOC);
 		return $result;
 	}
+
+	public function fetchUserDetails($userId)
+	{
+		$sql = "SELECT organization_name, email, contact, password FROM users WHERE id = :userId";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute(['userId' => $userId]);
+		$result = $stmt->fetch(PDO::FETCH_ASSOC);
+		return $result;
+	}
+
+	/**
+	 * Updates the details of a user in the database.
+	 *
+	 * @param int $userId The ID of the user to update.
+	 * @param string $organizationName The new organization name of the user.
+	 * @param string $email The new email address of the user.
+	 * @param string $contact The new contact number of the user.
+	 * 
+	 * @return bool Returns true on success, or false on failure.
+	 */
+	public function updateOrgDetails($userId, $orgName, $email, $contact)
+	{
+		try {
+			$sql = "UPDATE users SET organization_name = :orgName, email = :email, contact = :contact WHERE id = :userId";
+
+			$stmt = $this->conn->prepare($sql);
+
+			$params = [
+				'orgName' => $orgName,
+				'email' => $email,
+				'contact' => $contact,
+				'userId' => $userId
+			];
+
+			return $stmt->execute($params);
+		} catch (PDOException $e) {
+			error_log("Error updating user details: " . $e->getMessage());
+			return false;
+		}
+	}
+
 
 	public function addEvent($organizer_id, $title, $description, $location_details, $event_type, $start_datetime, $end_datetime, $ticket_price, $ticket_quantity_available, $event_photo)
 	{

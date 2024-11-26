@@ -57,16 +57,12 @@ unset($_SESSION['success'], $_SESSION['error']);
       </li>
 
       <li>
+      <a href="profile.php" class=""><i class='bx bx-user'></i>Profile</a>
+      </li>
+
+      <li>
         <a href="../assets/php/logout.php" class="logout"><i class="bx bx-log-out-circle"></i>Logout</a>
       </li>
-      <!-- <div class="side-menu">
-      <ul>
-        <li>
-          <a href="#"><i class="bx bx-moon"></i>Dark / Light</a>
-        </li>
-
-      </ul>
-    </div> -->
   </div>
   <!-- =============Sidebar Close================ -->
   <div class="content">
@@ -164,9 +160,9 @@ unset($_SESSION['success'], $_SESSION['error']);
                       <a href="event-attendees.php?event_id=<?= $event['event_id'] ?>" target="_blank" style="display: flex; align-items: center; gap: 5px; color: #388e3c;"><i class='bx bx-group' style="text-decoration: none; font-size: 20px;"></i><span style="text-decoration: underline;">View</span></a>
                     </td>
                     <td>
-                        <a href="event-sales.php?event_id=<?= $event['event_id'] ?>" target="_blank" style="display: flex; align-items: center; gap: 5px; color: #388e3c;"><i class='bx bx-dollar' style="text-decoration: none; font-size: 20px;"></i><span style="text-decoration: underline;">View</span></a>
+                      <a href="event-sales.php?event_id=<?= $event['event_id'] ?>" target="_blank" style="display: flex; align-items: center; gap: 5px; color: #388e3c;"><i class='bx bx-dollar' style="text-decoration: none; font-size: 20px;"></i><span style="text-decoration: underline;">View</span></a>
                     </td>
-                      <td>
+                    <td>
                       <div class="actions">
 
                         <a href="#" class="edit" id='openEditModalButton' data-id="<?= $event['event_id'] ?>" data-title="<?= $event['title'] ?>" data-description="<?= $event['description'] ?>" data-location="<?= $event['location_details'] ?>" data-type="<?= $event['event_type'] ?>" data-start="<?= $event['start_datetime'] ?>" data-end="<?= $event['end_datetime'] ?>" data-price="<?= $event['ticket_price'] ?>" data-capacity="<?= $event['ticket_quantity_available'] ?>" data-poster="<?= $event['event_photo'] ?>">
